@@ -1,0 +1,57 @@
+"
+" neovim-fuzzy
+"
+" Author:       Alexis Sellier <http://cloudhead.io>
+" Version:      0.1
+"
+if exists("g:loaded_fuzzy") || &cp || !executable('fzy') || !has('nvim')
+  finish
+endif
+let g:loaded_fuzzy = 1
+
+let g:fuzzy_find_command = "ag -g ''"
+let s:fuzzy_job_id = 0
+
+command! FuzzyOpen call s:fuzzy()
+command! FuzzyKill call s:fuzzy_kill()
+
+autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
+
+function! s:fuzzy_kill()
+  echo
+  call jobstop(s:fuzzy_job_id)
+endfunction
+
+function! s:fuzzy() abort
+  let lines = 12
+  let tmp = tempname()
+  let command = g:fuzzy_find_command . "| fzy -l " . lines . " > " . tmp
+  let opts = { 'tmp': tmp }
+
+  function! opts.on_exit(id, code) abort
+    bdelete!
+
+    if a:code != 0 || !filereadable(self.tmp)
+      return
+    endif
+
+    let result = readfile(self.tmp)
+    if !empty(result)
+      execute 'edit' fnameescape(join(result))
+    endif
+  endfunction
+
+  below new
+  execute 'resize' lines + 1
+  set filetype=fuzzy
+
+  if bufnr('FuzzyOpen') > 0
+    execute 'buffer' bufnr('FuzzyOpen')
+  else
+    call termopen(command, opts)
+    let s:fuzzy_job_id = b:terminal_job_id
+    file FuzzyOpen
+  endif
+  startinsert
+endfunction
+

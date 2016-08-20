@@ -1,0 +1,27 @@
+
+
+              neovim-fuzzy
+
+
+Provides fuzzy file finding for neovim, via fzy[1].
+
+[1]: https://github.com/jhawthorn/fzy
+
+. Dependencies
+
+  * fzy
+
+. Installation
+
+  Install `fzy` via your package manager, or check https://github.com/jhawthorn/fzy
+  for instructions.
+
+  If you're using vim-plug, add this to your vimrc:
+
+      Plug 'cloudhead/neovim-fuzzy'
+
+. Usage
+
+  Hit <Ctrl-P> to open the finder. Hit <Enter> to jump to the selected file
+  and <Esc> to close the pane.
+
