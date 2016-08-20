@@ -28,14 +28,10 @@ function! s:fuzzy() abort
   let outputs = tempname()
 
   " Get open buffers.
-  try
-    let bufs = filter(range(1, bufnr('$')),
-      \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
-    let bufs = map(bufs, 'bufname(v:val)')
-    call reverse(bufs)
-  catch
-    let bufs = []
-  endtry
+  let bufs = filter(range(1, bufnr('$')),
+    \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
+  let bufs = map(bufs, 'bufname(v:val)')
+  call reverse(bufs)
 
   " Add the '#' buffer at the head of the list.
   if bufnr('%') != bufnr('#')
