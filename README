@@ -22,6 +22,10 @@ Provides fuzzy file finding for neovim, via fzy[1].
 
 . Usage
 
-  Hit <Ctrl-P> to open the finder. Hit <Enter> to jump to the selected file
+  Add something like this to your vimrc:
+
+      nnoremap <C-p> :FuzzyOpen<CR>
+
+  Then hit <Ctrl-P> to open the finder. Hit <Enter> to jump to the selected file
   and <Esc> to close the pane.
 
