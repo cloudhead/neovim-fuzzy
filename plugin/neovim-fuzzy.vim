@@ -27,24 +27,28 @@ function! s:fuzzy() abort
   let inputs = tempname()
   let outputs = tempname()
 
-  let prevbuf = bufname('#')
-
   " Get open buffers.
   try
-	let bufs = filter(range(1, bufnr('$')),
-      \ 'buflisted(v:val) && bufnr("%") !~ v:val && bufnr("#") !~ v:val')
+    let bufs = filter(range(1, bufnr('$')),
+      \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
+    let bufs = map(bufs, 'bufname(v:val)')
+    call reverse(bufs)
   catch
-	let bufs = []
+    let bufs = []
   endtry
-  let bufs = map(bufs, 'bufname(v:val)')
+
+  " Add the '#' buffer at the head of the list.
+  if bufnr('%') != bufnr('#')
+    call insert(bufs, bufname('#'))
+  endif
 
   " Get all files, minus the open buffers.
   let files = split(system(g:fuzzy_find_command), '\n')
   let files = filter(files,
-    \ 'index(bufs, v:val) == -1 && bufname("#") !~ v:val && bufname("%") !~ v:val')
+    \ 'index(bufs, v:val) == -1 && bufname("#") != v:val && bufname("%") != v:val')
 
   " Put it all together.
-  let result = [prevbuf] + bufs + files
+  let result = bufs + files
 
   exe 'redir' '>' inputs
   silent echo join(result, "\n")
