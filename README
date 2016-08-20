@@ -3,7 +3,7 @@
               neovim-fuzzy
 
 
-Provides fuzzy file finding for neovim, via fzy[1].
+Fuzzy file finding for neovim, via fzy[1].
 
 [1]: https://github.com/jhawthorn/fzy
 
@@ -29,3 +29,5 @@ Provides fuzzy file finding for neovim, via fzy[1].
   Then hit <Ctrl-P> to open the finder. Hit <Enter> to jump to the selected file
   and <Esc> to close the pane.
 
+  When no input is given, fuzzy shows the previous buffer (also known as '#'),
+  followed by other open buffers, followed by all other files.
