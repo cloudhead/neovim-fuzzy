@@ -24,18 +24,43 @@ endfunction
 
 function! s:fuzzy() abort
   let lines = 12
-  let tmp = tempname()
-  let command = g:fuzzy_find_command . "| fzy -l " . lines . " > " . tmp
-  let opts = { 'tmp': tmp }
+  let inputs = tempname()
+  let outputs = tempname()
+
+  let prevbuf = bufname('#')
+
+  " Get open buffers.
+  try
+	let bufs = filter(range(1, bufnr('$')),
+      \ 'buflisted(v:val) && bufnr("%") !~ v:val && bufnr("#") !~ v:val')
+  catch
+	let bufs = []
+  endtry
+  let bufs = map(bufs, 'bufname(v:val)')
+
+  " Get all files, minus the open buffers.
+  let files = split(system(g:fuzzy_find_command), '\n')
+  let files = filter(files,
+    \ 'index(bufs, v:val) == -1 && bufname("#") !~ v:val && bufname("%") !~ v:val')
+
+  " Put it all together.
+  let result = [prevbuf] + bufs + files
+
+  exe 'redir' '>' inputs
+  silent echo join(result, "\n")
+  redir END
+
+  let command = "fzy -l " . lines . " > " . outputs . " < " . inputs
+  let opts = { 'outputs': outputs }
 
   function! opts.on_exit(id, code) abort
     bdelete!
 
-    if a:code != 0 || !filereadable(self.tmp)
+    if a:code != 0 || !filereadable(self.outputs)
       return
     endif
 
-    let result = readfile(self.tmp)
+    let result = readfile(self.outputs)
     if !empty(result)
       execute 'edit' fnameescape(join(result))
     endif
