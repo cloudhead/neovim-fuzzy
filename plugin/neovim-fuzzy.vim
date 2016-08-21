@@ -72,9 +72,10 @@ function! s:fuzzy() abort
   if bufnr('FuzzyOpen') > 0
     execute 'buffer' bufnr('FuzzyOpen')
   else
-    call termopen(command, opts)
-    let s:fuzzy_job_id = b:terminal_job_id
+    let s:fuzzy_job_id = termopen(command, opts)
+    let b:fuzzy_status = 'FuzzyOpen (found ' . len(result) . ' files)'
     file FuzzyOpen
+    setlocal statusline=%{b:fuzzy_status}
   endif
   startinsert
 endfunction
