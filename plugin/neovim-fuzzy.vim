@@ -46,9 +46,7 @@ function! s:fuzzy() abort
   " Put it all together.
   let result = bufs + files
 
-  exe 'redir' '>' inputs
-  silent echo join(result, "\n")
-  redir END
+  call writefile(result, inputs)
 
   let command = "fzy -l " . lines . " > " . outputs . " < " . inputs
   let opts = { 'outputs': outputs }
