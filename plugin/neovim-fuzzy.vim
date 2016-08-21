@@ -34,7 +34,7 @@ function! s:fuzzy() abort
   call reverse(bufs)
 
   " Add the '#' buffer at the head of the list.
-  if bufnr('%') != bufnr('#')
+  if bufnr('#') > 0 && bufnr('%') != bufnr('#')
     call insert(bufs, bufname('#'))
   endif
 
