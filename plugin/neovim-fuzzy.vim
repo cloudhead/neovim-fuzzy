@@ -39,7 +39,7 @@ function! s:fuzzy() abort
   endif
 
   " Get all files, minus the open buffers.
-  let files = split(system(g:fuzzy_find_command), '\n')
+  let files = systemlist(g:fuzzy_find_command)
   let files = filter(files,
     \ 'index(bufs, v:val) == -1 && bufname("#") != v:val && bufname("%") != v:val')
 
