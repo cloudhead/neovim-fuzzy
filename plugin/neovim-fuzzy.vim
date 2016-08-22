@@ -26,6 +26,7 @@ function! s:fuzzy() abort
   let lines = 12
   let inputs = tempname()
   let outputs = tempname()
+  let ignores = tempname()
 
   " Get open buffers.
   let bufs = filter(range(1, bufnr('$')),
@@ -38,11 +39,12 @@ function! s:fuzzy() abort
     call insert(bufs, bufname('#'))
   endif
 
-  let ignorelist = !empty(bufname('%')) ? add(bufs, bufname('%')) : bufs
-  let ignore     = join(map(ignorelist, "'--ignore ' . v:val"), ' ')
+  " Save a list of files the find command should ignore.
+  let ignorelist = !empty(bufname('%')) ? bufs + [bufname('%')] : bufs
+  call writefile(ignorelist, ignores, 'w')
 
   " Get all files, minus the open buffers.
-  let files = systemlist(g:fuzzy_find_command . ' -Q ' . ignore)
+  let files = systemlist(g:fuzzy_find_command . ' -Q --path-to-agignore ' . ignores)
 
   " Put it all together.
   let result = bufs + files
