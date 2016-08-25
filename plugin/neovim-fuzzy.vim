@@ -11,6 +11,8 @@ let g:loaded_fuzzy = 1
 
 let g:fuzzy_find_command = "ag --silent -g ''"
 let s:fuzzy_job_id = 0
+let s:fuzzy_prev_window = -1
+let s:fuzzy_prev_window_height = -1
 
 command! FuzzyOpen call s:fuzzy()
 command! FuzzyKill call s:fuzzy_kill()
@@ -56,6 +58,8 @@ function! s:fuzzy() abort
 
   function! opts.on_exit(id, code) abort
     bdelete!
+    call win_gotoid(s:fuzzy_prev_window)
+    exe 'resize' s:fuzzy_prev_window_height
 
     if a:code != 0 || !filereadable(self.outputs)
       return
@@ -67,8 +71,9 @@ function! s:fuzzy() abort
     endif
   endfunction
 
-  below new
-  execute 'resize' lines + 1
+  let s:fuzzy_prev_window = win_getid()
+  let s:fuzzy_prev_window_height = winheight('%')
+  exe 'below' string(lines + 1) . 'new'
   set filetype=fuzzy
 
   if bufnr('FuzzyOpen') > 0
