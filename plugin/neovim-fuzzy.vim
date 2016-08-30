@@ -14,17 +14,6 @@ let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
 
-if ! exists("g:fuzzy_opencmd")
-  let g:fuzzy_opencmd = "edit"
-endif
-if ! exists("g:fuzzy_tabopen")
-  let g:fuzzy_tabopen = 0
-endif
-if ! exists("g:fuzzy_jump_if_open")
-  let g:fuzzy_jump_if_open = 0
-endif
-
-
 command! FuzzyOpen call s:fuzzy()
 command! FuzzyKill call s:fuzzy_kill()
 
@@ -41,22 +30,8 @@ function! s:fuzzy() abort
   let outputs = tempname()
   let ignores = tempname()
 
-  if exists("g:fuzzy_opencmd")
-    " overrride toggle options
-    let s:fuzzy_open_command = g:fuzzy_opencmd
-  else
-    " use toggle options
-    let s:fuzzy_open_command = ''
-
-    if g:fuzzy_tabopen
-      let s:fuzzy_open_command = 'tab'
-    endif
-
-    if g:fuzzy_jump_if_open
-      let s:fuzzy_open_command .= ' drop' "drop or tab drop
-    else
-      let s:fuzzy_open_command .= 'edit' "edit or tabedit
-    endif
+  if ! exists("g:fuzzy_opencmd")
+    let g:fuzzy_opencmd = 'edit'
   endif
 
   " Get open buffers.
@@ -96,7 +71,7 @@ function! s:fuzzy() abort
 
     let result = readfile(self.outputs)
     if !empty(result)
-      execute s:fuzzy_open_command fnameescape(join(result))
+      execute g:fuzzy_opencmd fnameescape(join(result))
     endif
   endfunction
 
