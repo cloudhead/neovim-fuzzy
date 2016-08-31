@@ -58,13 +58,11 @@ function! s:fuzzy() abort
   let opts = { 'outputs': outputs }
 
   function! opts.on_exit(id, code) abort
-    " NOTE: Normally, we should be able to just use :bdelete! here, but this
-    " doesn't seem to work when using :FuzzyOpen from inside netrw; the buffer
-    " is deleted but the window isn't closed. This ensures both happen.
-    close
-    exe 'silent' 'bdelete!' s:fuzzy_bufnr
-
+    " NOTE: The order of these operations is important: Doing the delete first
+    " would leave an empty buffer in netrw. Doing the resize first would break
+    " the height of other splits below it.
     call win_gotoid(s:fuzzy_prev_window)
+    exe 'silent' 'bdelete!' s:fuzzy_bufnr
     exe 'resize' s:fuzzy_prev_window_height
 
     if a:code != 0 || !filereadable(self.outputs)
