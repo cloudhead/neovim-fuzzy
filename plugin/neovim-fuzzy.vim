@@ -9,7 +9,7 @@ if exists("g:loaded_fuzzy") || &cp || !executable('fzy') || !has('nvim')
 endif
 let g:loaded_fuzzy = 1
 
-let g:fuzzy_find_command = "ag --silent -g ''"
+let g:fuzzy_find_command = "ag --silent --nocolor -g ''"
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
