@@ -78,13 +78,12 @@ function! s:fuzzy() abort
   let s:fuzzy_prev_window = win_getid()
   let s:fuzzy_prev_window_height = winheight('%')
 
-  if bufnr('FuzzyOpen') > 0
-    exe 'keepalt' 'below' lines . 'sp' bufname('FuzzyOpen')
+  if bufnr(s:fuzzy_bufnr) > 0
+    exe 'keepalt' 'below' lines . 'sp' bufname(s:fuzzy_bufnr)
   else
     exe 'keepalt' 'below' lines . 'new'
     let s:fuzzy_job_id = termopen(command, opts)
     let b:fuzzy_status = 'FuzzyOpen (found ' . len(result) . ' files)'
-    file FuzzyOpen
     setlocal statusline=%{b:fuzzy_status}
   endif
   let s:fuzzy_bufnr = bufnr('%')
