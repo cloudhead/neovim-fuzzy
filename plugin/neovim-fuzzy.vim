@@ -13,6 +13,7 @@ let g:fuzzy_find_command = "ag --silent -g ''"
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
+let s:fuzzy_bufnr = -1
 
 command! FuzzyOpen call s:fuzzy()
 command! FuzzyKill call s:fuzzy_kill()
@@ -57,7 +58,12 @@ function! s:fuzzy() abort
   let opts = { 'outputs': outputs }
 
   function! opts.on_exit(id, code) abort
-    bdelete!
+    " NOTE: Normally, we should be able to just use :bdelete! here, but this
+    " doesn't seem to work when using :FuzzyOpen from inside netrw; the buffer
+    " is deleted but the window isn't closed. This ensures both happen.
+    close
+    exe 'silent' 'bdelete!' s:fuzzy_bufnr
+
     call win_gotoid(s:fuzzy_prev_window)
     exe 'resize' s:fuzzy_prev_window_height
 
@@ -83,6 +89,7 @@ function! s:fuzzy() abort
     file FuzzyOpen
     setlocal statusline=%{b:fuzzy_status}
   endif
+  let s:fuzzy_bufnr = bufnr('%')
   set filetype=fuzzy
   startinsert
 endfunction
