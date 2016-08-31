@@ -31,6 +31,10 @@ function! s:fuzzy() abort
   let outputs = tempname()
   let ignores = tempname()
 
+  if ! exists("g:fuzzy_opencmd")
+    let g:fuzzy_opencmd = 'edit'
+  endif
+
   " Get open buffers.
   let bufs = filter(range(1, bufnr('$')),
     \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
@@ -71,7 +75,7 @@ function! s:fuzzy() abort
 
     let result = readfile(self.outputs)
     if !empty(result)
-      execute 'edit' fnameescape(join(result))
+      execute g:fuzzy_opencmd fnameescape(join(result))
     endif
   endfunction
 
