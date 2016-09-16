@@ -4,15 +4,17 @@
 " Author:       Alexis Sellier <http://cloudhead.io>
 " Version:      0.1
 "
-if exists("g:loaded_fuzzy") || &cp || !executable('fzy') || !has('nvim')
+if exists("g:loaded_fuzzy") || &cp || !has('nvim')
   finish
 endif
 let g:loaded_fuzzy = 1
 
 if !exists("g:fuzzy_find_command")
-  let g:fuzzy_find_command = "ag --silent --nocolor -g ''"
+  let g:fuzzy_find_command =
+    \ "ag --silent --nocolor -g '' -Q --path-to-agignore %s"
 endif
 
+let s:fuzzy_find_command_name = split(g:fuzzy_find_command)[0]
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
@@ -33,6 +35,17 @@ function! s:fuzzy() abort
   let inputs = tempname()
   let outputs = tempname()
   let ignores = tempname()
+
+  if !executable('fzy')
+    echoerr "Fuzzy: the executable 'fzy' was not found in your path"
+    return
+  endif
+
+  if !executable(s:fuzzy_find_command_name)
+    echoerr "Fuzzy: the executable '" .
+          \ s:fuzzy_find_command_name . "' was found in your path"
+    return
+  endif
 
   if ! exists("g:fuzzy_opencmd")
     let g:fuzzy_opencmd = 'edit'
@@ -57,7 +70,7 @@ function! s:fuzzy() abort
   call writefile(ignorelist, ignores, 'w')
 
   " Get all files, minus the open buffers.
-  let files = systemlist(g:fuzzy_find_command . ' -Q --path-to-agignore ' . ignores)
+  let files = systemlist(printf(g:fuzzy_find_command, ignores))
 
   " Put it all together.
   let result = bufs + files
