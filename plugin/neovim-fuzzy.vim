@@ -14,6 +14,10 @@ if !exists("g:fuzzy_find_command")
     \ "ag --silent --nocolor -g '' -Q --path-to-agignore %s"
 endif
 
+if !exists("g:fuzzy_opencmd")
+  let g:fuzzy_opencmd = 'edit'
+endif
+
 let s:fuzzy_find_command_name = split(g:fuzzy_find_command)[0]
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
@@ -45,10 +49,6 @@ function! s:fuzzy() abort
     echoerr "Fuzzy: the executable '" .
           \ s:fuzzy_find_command_name . "' was found in your path"
     return
-  endif
-
-  if ! exists("g:fuzzy_opencmd")
-    let g:fuzzy_opencmd = 'edit'
   endif
 
   " Clear the command line.
