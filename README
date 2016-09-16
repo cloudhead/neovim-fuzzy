@@ -30,6 +30,8 @@ Fuzzy file finding for neovim, via fzy[1].
 
       Plug 'cloudhead/neovim-fuzzy'
 
+  You can also copy the contents of this directory into your .vim folder.
+
 . Usage
 
   Add something like this to your vimrc:
