@@ -9,16 +9,26 @@ if exists("g:loaded_fuzzy") || &cp || !has('nvim')
 endif
 let g:loaded_fuzzy = 1
 
-if !exists("g:fuzzy_find_command")
-  let g:fuzzy_find_command =
-    \ "ag --silent --nocolor -g '' -Q --path-to-agignore %s"
+if executable("rg")
+  function! s:fuzzy_find(il)
+    return s:rg(a:il)
+  endfunction
+elseif executable("ag")
+  function! s:fuzzy_find(il)
+    return s:ag(a:il)
+  endfunction
+else
+  function! s:fuzzy_find(il)
+    echoerr "Fuzzy: no search executable was found. " .
+      \ "Please make sure either 'ag' or 'rg' are in your path"
+    return []
+  endfunction
 endif
 
 if !exists("g:fuzzy_opencmd")
   let g:fuzzy_opencmd = 'edit'
 endif
 
-let s:fuzzy_find_command_name = split(g:fuzzy_find_command)[0]
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
@@ -29,6 +39,23 @@ command! FuzzyKill call s:fuzzy_kill()
 
 autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
 
+" Find files with ripgrep.
+function! s:rg(ignorelist)
+  let ignores = []
+  for str in a:ignorelist
+    call add(ignores, printf("-g '!%s'", str))
+  endfor
+  return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' '))
+endfunction
+
+" Find files with the silver searcher.
+function! s:ag(ignorelist)
+  let ignorefile = tempname()
+  call writefile(a:ignorelist, ignorefile, 'w')
+  return systemlist(
+    \ "ag --silent --nocolor -g '' -Q --path-to-agignore " . ignorefile)
+endfunction
+
 function! s:fuzzy_kill()
   echo
   call jobstop(s:fuzzy_job_id)
@@ -38,16 +65,9 @@ function! s:fuzzy() abort
   let lines = 12
   let inputs = tempname()
   let outputs = tempname()
-  let ignores = tempname()
 
   if !executable('fzy')
     echoerr "Fuzzy: the executable 'fzy' was not found in your path"
-    return
-  endif
-
-  if !executable(s:fuzzy_find_command_name)
-    echoerr "Fuzzy: the executable '" .
-          \ s:fuzzy_find_command_name . "' was found in your path"
     return
   endif
 
@@ -67,10 +87,13 @@ function! s:fuzzy() abort
 
   " Save a list of files the find command should ignore.
   let ignorelist = !empty(bufname('%')) ? bufs + [bufname('%')] : bufs
-  call writefile(ignorelist, ignores, 'w')
 
   " Get all files, minus the open buffers.
-  let files = systemlist(printf(g:fuzzy_find_command, ignores))
+  let files = s:fuzzy_find(ignorelist)
+
+  if empty(files)
+    return
+  endif
 
   " Put it all together.
   let result = bufs + files
