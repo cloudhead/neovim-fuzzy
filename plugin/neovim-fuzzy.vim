@@ -19,20 +19,25 @@ let s:fuzzy_prev_window_height = -1
 let s:fuzzy_bufnr = -1
 let s:fuzzy_source = {}
 
-" Methods to be replaced by an actual implementation.
-function! s:fuzzy_source.find(il) dict
+function! s:fuzzy_err_noexec()
   throw "Fuzzy: no search executable was found. " .
-    \ "Please make sure either 'ag' or 'rg' are in your path"
+      \ "Please make sure either '" .  s:ag.path .
+      \ "' or '" . s:rg.path . "' are in your path"
 endfunction
 
-function! s:fuzzy_source.find_contents(il) dict
-  return s:fuzzy_source.find(a:il)
+" Methods to be replaced by an actual implementation.
+function! s:fuzzy_source.find(il) dict
+  call s:fuzzy_err_noexec()
+endfunction
+
+function! s:fuzzy_source.find_contents() dict
+  call s:fuzzy_err_noexec()
 endfunction
 
 "
 " ag (the silver searcher)
 "
-let s:ag = {}
+let s:ag = { 'path': 'ag' }
 
 function! s:ag.find(ignorelist) dict
   let ignorefile = tempname()
@@ -48,7 +53,7 @@ endfunction
 "
 " rg (ripgrep)
 "
-let s:rg = {}
+let s:rg = { 'path': 'rg' }
 
 function! s:rg.find(ignorelist) dict
   let ignores = []
@@ -63,9 +68,9 @@ function! s:rg.find_contents() dict
 endfunction
 
 " Set the finder based on available binaries.
-if executable("rg")
+if executable(s:rg.path)
   let s:fuzzy_source = s:rg
-elseif executable("ag")
+elseif executable(s:ag.path)
   let s:fuzzy_source = s:ag
 endif
 
