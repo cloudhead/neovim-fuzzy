@@ -25,9 +25,8 @@ elseif executable("ag")
   endfunction
 else
   function! s:fuzzy_find(il)
-    echoerr "Fuzzy: no search executable was found. " .
+    throw "Fuzzy: no search executable was found. " .
       \ "Please make sure either 'ag' or 'rg' are in your path"
-    return []
   endfunction
   function! s:fuzzy_find_contents(il)
     return s:fuzzy_find(a:il)
@@ -111,11 +110,12 @@ function! s:fuzzy_open() abort
   let ignorelist = !empty(bufname('%')) ? bufs + [bufname('%')] : bufs
 
   " Get all files, minus the open buffers.
-  let files = s:fuzzy_find(ignorelist)
-
-  if empty(files)
+  try
+    let files = s:fuzzy_find(ignorelist)
+  catch
+    echoerr v:exception
     return
-  endif
+  endtry
 
   " Put it all together.
   let result = bufs + files
