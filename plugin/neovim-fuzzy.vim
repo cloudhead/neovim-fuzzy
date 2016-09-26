@@ -86,7 +86,13 @@ function! s:fuzzy_kill()
 endfunction
 
 function! s:fuzzy_search() abort
-  let contents = s:fuzzy_source.find_contents()
+  try
+    let contents = s:fuzzy_source.find_contents()
+  catch
+    echoerr v:exception
+    return
+  endtry
+
   let opts = { 'lines': 12 }
 
   function! opts.handler(result) abort
