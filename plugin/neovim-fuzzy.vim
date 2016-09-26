@@ -9,30 +9,6 @@ if exists("g:loaded_fuzzy") || &cp || !has('nvim')
 endif
 let g:loaded_fuzzy = 1
 
-if executable("rg")
-  function! s:fuzzy_find(il)
-    return s:rg(a:il)
-  endfunction
-  function! s:fuzzy_find_contents()
-    return s:rg_contents()
-  endfunction
-elseif executable("ag")
-  function! s:fuzzy_find(il)
-    return s:ag(a:il)
-  endfunction
-  function! s:fuzzy_find_contents()
-    return s:ag_contents()
-  endfunction
-else
-  function! s:fuzzy_find(il)
-    throw "Fuzzy: no search executable was found. " .
-      \ "Please make sure either 'ag' or 'rg' are in your path"
-  endfunction
-  function! s:fuzzy_find_contents(il)
-    return s:fuzzy_find(a:il)
-  endfunction
-endif
-
 if !exists("g:fuzzy_opencmd")
   let g:fuzzy_opencmd = 'edit'
 endif
@@ -41,15 +17,40 @@ let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
 let s:fuzzy_bufnr = -1
+let s:fuzzy_source = {}
 
-command! FuzzySearch call s:fuzzy_search()
-command! FuzzyOpen   call s:fuzzy_open()
-command! FuzzyKill   call s:fuzzy_kill()
+" Methods to be replaced by an actual implementation.
+function! s:fuzzy_source.find(il) dict
+  throw "Fuzzy: no search executable was found. " .
+    \ "Please make sure either 'ag' or 'rg' are in your path"
+endfunction
 
-autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
+function! s:fuzzy_source.find_contents(il) dict
+  return s:fuzzy_source.find(a:il)
+endfunction
 
-" Find files with ripgrep.
-function! s:rg(ignorelist)
+"
+" ag (the silver searcher)
+"
+let s:ag = {}
+
+function! s:ag.find(ignorelist) dict
+  let ignorefile = tempname()
+  call writefile(a:ignorelist, ignorefile, 'w')
+  return systemlist(
+    \ "ag --silent --nocolor -g '' -Q --path-to-agignore " . ignorefile)
+endfunction
+
+function! s:ag.find_contents() dict
+  return systemlist("ag --noheading --nogroup --nocolor '^(?=.)' .")
+endfunction
+
+"
+" rg (ripgrep)
+"
+let s:rg = {}
+
+function! s:rg.find(ignorelist) dict
   let ignores = []
   for str in a:ignorelist
     call add(ignores, printf("-g '!%s'", str))
@@ -57,21 +58,22 @@ function! s:rg(ignorelist)
   return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' '))
 endfunction
 
-function! s:rg_contents()
+function! s:rg.find_contents() dict
   return systemlist("rg -n --no-heading --color never '.' .")
 endfunction
 
-" Find files with the silver searcher.
-function! s:ag(ignorelist)
-  let ignorefile = tempname()
-  call writefile(a:ignorelist, ignorefile, 'w')
-  return systemlist(
-    \ "ag --silent --nocolor -g '' -Q --path-to-agignore " . ignorefile)
-endfunction
+" Set the finder based on available binaries.
+if executable("rg")
+  let s:fuzzy_source = s:rg
+elseif executable("ag")
+  let s:fuzzy_source = s:ag
+endif
 
-function! s:ag_contents()
-  return systemlist("ag --noheading --nogroup --nocolor '^(?=.)' .")
-endfunction
+command! FuzzySearch call s:fuzzy_search()
+command! FuzzyOpen   call s:fuzzy_open()
+command! FuzzyKill   call s:fuzzy_kill()
+
+autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
 
 function! s:fuzzy_kill()
   echo
@@ -79,7 +81,7 @@ function! s:fuzzy_kill()
 endfunction
 
 function! s:fuzzy_search() abort
-  let contents = s:fuzzy_find_contents()
+  let contents = s:fuzzy_source.find_contents()
   let opts = { 'lines': 12 }
 
   function! opts.handler(result) abort
@@ -111,7 +113,7 @@ function! s:fuzzy_open() abort
 
   " Get all files, minus the open buffers.
   try
-    let files = s:fuzzy_find(ignorelist)
+    let files = s:fuzzy_source.find(ignorelist)
   catch
     echoerr v:exception
     return
