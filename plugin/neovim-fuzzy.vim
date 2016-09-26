@@ -189,7 +189,7 @@ function! s:fuzzy(choices, opts) abort
   else
     exe 'keepalt' 'below' a:opts.lines . 'new'
     let s:fuzzy_job_id = termopen(command, opts)
-    let b:fuzzy_status = 'FuzzyOpen (found ' . len(a:choices) . ' files)'
+    let b:fuzzy_status = 'FuzzyOpen (' . len(a:choices) . ' choices)'
     setlocal statusline=%{b:fuzzy_status}
   endif
   let s:fuzzy_bufnr = bufnr('%')
