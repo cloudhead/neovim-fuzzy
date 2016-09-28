@@ -43,7 +43,7 @@ function! s:ag.find(ignorelist) dict
   let ignorefile = tempname()
   call writefile(a:ignorelist, ignorefile, 'w')
   return systemlist(
-    \ "ag --silent --nocolor -g '' -Q --path-to-agignore " . ignorefile)
+    \ "ag --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile)
 endfunction
 
 function! s:ag.find_contents() dict
