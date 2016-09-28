@@ -11,7 +11,7 @@ let g:loaded_fuzzy = 1
 
 if !exists("g:fuzzy_find_command")
   let g:fuzzy_find_command =
-    \ "ag --silent --nocolor -g '' -Q --path-to-agignore %s"
+    \ "ag --silent --nocolor -g '' -Q --path-to-ignore %s"
 endif
 
 if !exists("g:fuzzy_opencmd")
