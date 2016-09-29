@@ -46,8 +46,9 @@ function! s:ag.find(ignorelist) dict
     \ "ag --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile)
 endfunction
 
-function! s:ag.find_contents() dict
-  return systemlist("ag --noheading --nogroup --nocolor '^(?=.)' .")
+function! s:ag.find_contents(query) dict
+  let query = empty(a:query) ? '^(?=.)' : a:query
+  return systemlist("ag --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
 endfunction
 
 "
@@ -63,8 +64,9 @@ function! s:rg.find(ignorelist) dict
   return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' '))
 endfunction
 
-function! s:rg.find_contents() dict
-  return systemlist("rg -n --no-heading --color never '.' .")
+function! s:rg.find_contents(query) dict
+  let query = empty(a:query) ? '.' : shellescape(a:query)
+  return systemlist("rg -n --no-heading --color never -S " . query . " .")
 endfunction
 
 " Set the finder based on available binaries.
@@ -74,9 +76,9 @@ elseif executable(s:ag.path)
   let s:fuzzy_source = s:ag
 endif
 
-command! FuzzySearch call s:fuzzy_search()
-command! FuzzyOpen   call s:fuzzy_open()
-command! FuzzyKill   call s:fuzzy_kill()
+command! -nargs=? FuzzySearch call s:fuzzy_search(<q-args>)
+command!          FuzzyOpen   call s:fuzzy_open()
+command!          FuzzyKill   call s:fuzzy_kill()
 
 autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
 
@@ -85,9 +87,9 @@ function! s:fuzzy_kill()
   call jobstop(s:fuzzy_job_id)
 endfunction
 
-function! s:fuzzy_search() abort
+function! s:fuzzy_search(str) abort
   try
-    let contents = s:fuzzy_source.find_contents()
+    let contents = s:fuzzy_source.find_contents(a:str)
   catch
     echoerr v:exception
     return
