@@ -95,7 +95,7 @@ function! s:fuzzy_search(str) abort
     return
   endtry
 
-  let opts = { 'lines': 12, 'statusfmt': 'FuzzySearch (%d lines)' }
+  let opts = { 'lines': 12, 'statusfmt': 'FuzzySearch (%d results)' }
 
   function! opts.handler(result) abort
     let parts = split(join(a:result), ':')
