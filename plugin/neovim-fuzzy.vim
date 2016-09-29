@@ -76,7 +76,7 @@ elseif executable(s:ag.path)
   let s:fuzzy_source = s:ag
 endif
 
-command! -nargs=? FuzzySearch call s:fuzzy_search(<q-args>)
+command! -nargs=? FuzzyGrep   call s:fuzzy_grep(<q-args>)
 command!          FuzzyOpen   call s:fuzzy_open()
 command!          FuzzyKill   call s:fuzzy_kill()
 
@@ -87,7 +87,7 @@ function! s:fuzzy_kill()
   call jobstop(s:fuzzy_job_id)
 endfunction
 
-function! s:fuzzy_search(str) abort
+function! s:fuzzy_grep(str) abort
   try
     let contents = s:fuzzy_source.find_contents(a:str)
   catch
@@ -95,7 +95,7 @@ function! s:fuzzy_search(str) abort
     return
   endtry
 
-  let opts = { 'lines': 12, 'statusfmt': 'FuzzySearch (%d results)' }
+  let opts = { 'lines': 12, 'statusfmt': 'FuzzyGrep (%d results)' }
 
   function! opts.handler(result) abort
     let parts = split(join(a:result), ':')
