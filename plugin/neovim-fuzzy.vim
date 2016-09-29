@@ -39,11 +39,11 @@ endfunction
 "
 let s:ag = { 'path': 'ag' }
 
-function! s:ag.find(ignorelist) dict
+function! s:ag.find(root, ignorelist) dict
   let ignorefile = tempname()
   call writefile(a:ignorelist, ignorefile, 'w')
   return systemlist(
-    \ "ag --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile)
+    \ "ag --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
 endfunction
 
 function! s:ag.find_contents(query) dict
@@ -56,12 +56,12 @@ endfunction
 "
 let s:rg = { 'path': 'rg' }
 
-function! s:rg.find(ignorelist) dict
+function! s:rg.find(root, ignorelist) dict
   let ignores = []
   for str in a:ignorelist
     call add(ignores, printf("-g '!%s'", str))
   endfor
-  return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' '))
+  return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root)
 endfunction
 
 function! s:rg.find_contents(query) dict
@@ -77,7 +77,7 @@ elseif executable(s:ag.path)
 endif
 
 command! -nargs=? FuzzyGrep   call s:fuzzy_grep(<q-args>)
-command!          FuzzyOpen   call s:fuzzy_open()
+command! -nargs=? FuzzyOpen   call s:fuzzy_open(<q-args>)
 command!          FuzzyKill   call s:fuzzy_kill()
 
 autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
@@ -109,7 +109,7 @@ function! s:fuzzy_grep(str) abort
   return s:fuzzy(contents, opts)
 endfunction
 
-function! s:fuzzy_open() abort
+function! s:fuzzy_open(root) abort
   " Get open buffers.
   let bufs = filter(range(1, bufnr('$')),
     \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
@@ -126,7 +126,7 @@ function! s:fuzzy_open() abort
 
   " Get all files, minus the open buffers.
   try
-    let files = s:fuzzy_source.find(ignorelist)
+    let files = s:fuzzy_source.find(a:root, ignorelist)
   catch
     echoerr v:exception
     return
