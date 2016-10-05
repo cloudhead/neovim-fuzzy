@@ -116,7 +116,7 @@ function! s:fuzzy_grep(str) abort
     return
   endtry
 
-  let opts = { 'lines': 12, 'statusfmt': 'FuzzyGrep (%d results)', 'root': '.' }
+  let opts = { 'lines': 12, 'statusfmt': 'FuzzyGrep %s (%d results)', 'root': '.' }
 
   function! opts.handler(result) abort
     let parts = split(join(a:result), ':')
@@ -161,7 +161,7 @@ function! s:fuzzy_open(root) abort
   " Put it all together.
   let result = bufs + files
 
-  let opts = { 'lines': 12, 'statusfmt': 'FuzzyOpen (%d files)', 'root': root }
+  let opts = { 'lines': 12, 'statusfmt': 'FuzzyOpen %s (%d files)', 'root': root }
   function! opts.handler(result)
     return { 'name': join(a:result) }
   endfunction
@@ -219,7 +219,10 @@ function! s:fuzzy(choices, opts) abort
   else
     exe 'keepalt' 'below' a:opts.lines . 'new'
     let s:fuzzy_job_id = termopen(command, opts)
-    let b:fuzzy_status = printf(a:opts.statusfmt, len(a:choices))
+    let b:fuzzy_status = printf(
+      \ a:opts.statusfmt,
+      \ fnamemodify(opts.root, ':~:.'),
+      \ len(a:choices))
     setlocal statusline=%{b:fuzzy_status}
   endif
   let s:fuzzy_bufnr = bufnr('%')
