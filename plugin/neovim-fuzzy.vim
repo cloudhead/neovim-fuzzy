@@ -13,11 +13,32 @@ if !exists("g:fuzzy_opencmd")
   let g:fuzzy_opencmd = 'edit'
 endif
 
+if !exists("g:fuzzy_rootcmds")
+  let g:fuzzy_rootcmds = [
+  \ 'git rev-parse --show-toplevel',
+  \ 'hg root'
+  \ ]
+endif
+
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
 let s:fuzzy_bufnr = -1
 let s:fuzzy_source = {}
+
+function! s:strip(str)
+  return substitute(a:str, '\n*$', '', 'g')
+endfunction
+
+function! s:fuzzy_getroot()
+  for cmd in g:fuzzy_rootcmds
+    let result = system(cmd)
+    if v:shell_error == 0
+      return s:strip(result)
+    endif
+  endfor
+  return "."
+endfunction
 
 function! s:fuzzy_err_noexec()
   throw "Fuzzy: no search executable was found. " .
@@ -110,32 +131,37 @@ function! s:fuzzy_grep(str) abort
 endfunction
 
 function! s:fuzzy_open(root) abort
+  let root = empty(a:root) ? s:fuzzy_getroot() : a:root
+  exe 'lcd' root
+
   " Get open buffers.
   let bufs = filter(range(1, bufnr('$')),
     \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
-  let bufs = map(bufs, 'bufname(v:val)')
+  let bufs = map(bufs, 'expand(bufname(v:val))')
   call reverse(bufs)
 
   " Add the '#' buffer at the head of the list.
   if bufnr('#') > 0 && bufnr('%') != bufnr('#')
-    call insert(bufs, bufname('#'))
+    call insert(bufs, expand(bufname('#')))
   endif
 
   " Save a list of files the find command should ignore.
-  let ignorelist = !empty(bufname('%')) ? bufs + [bufname('%')] : bufs
+  let ignorelist = !empty(bufname('%')) ? bufs + [expand(bufname('%'))] : bufs
 
   " Get all files, minus the open buffers.
   try
-    let files = s:fuzzy_source.find(a:root, ignorelist)
+    let files = s:fuzzy_source.find('.', ignorelist)
   catch
     echoerr v:exception
     return
+  finally
+    lcd -
   endtry
 
   " Put it all together.
   let result = bufs + files
 
-  let opts = { 'lines': 12, 'statusfmt': 'FuzzyOpen (%d files)' }
+  let opts = { 'lines': 12, 'statusfmt': 'FuzzyOpen (%d files)', 'root': root }
   function! opts.handler(result)
     return { 'name': join(a:result) }
   endfunction
@@ -158,7 +184,7 @@ function! s:fuzzy(choices, opts) abort
   call writefile(a:choices, inputs)
 
   let command = "fzy -l " . a:opts.lines . " > " . outputs . " < " . inputs
-  let opts = { 'outputs': outputs, 'handler': a:opts.handler }
+  let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'root': a:opts.root }
 
   function! opts.on_exit(id, code) abort
     " NOTE: The order of these operations is important: Doing the delete first
@@ -175,7 +201,9 @@ function! s:fuzzy(choices, opts) abort
     let result = readfile(self.outputs)
     if !empty(result)
       let file = self.handler(result)
-      silent execute g:fuzzy_opencmd fnameescape(file.name)
+      exe 'lcd' self.root
+      silent execute g:fuzzy_opencmd expand(fnameescape(file.name))
+      lcd -
       if has_key(file, 'lnum')
         silent execute file.lnum
         normal! zz
