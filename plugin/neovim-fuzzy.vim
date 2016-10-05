@@ -82,12 +82,12 @@ function! s:rg.find(root, ignorelist) dict
   for str in a:ignorelist
     call add(ignores, printf("-g '!%s'", str))
   endfor
-  return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root)
+  return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
 endfunction
 
 function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
-  return systemlist("rg -n --no-heading --color never -S " . query . " .")
+  return systemlist("rg -n --no-heading --color never -S " . query . " . 2>/dev/null")
 endfunction
 
 " Set the finder based on available binaries.
