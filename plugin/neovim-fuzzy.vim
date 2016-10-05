@@ -116,7 +116,7 @@ function! s:fuzzy_grep(str) abort
     return
   endtry
 
-  let opts = { 'lines': 12, 'statusfmt': 'FuzzyGrep (%d results)' }
+  let opts = { 'lines': 12, 'statusfmt': 'FuzzyGrep (%d results)', 'root': '.' }
 
   function! opts.handler(result) abort
     let parts = split(join(a:result), ':')
