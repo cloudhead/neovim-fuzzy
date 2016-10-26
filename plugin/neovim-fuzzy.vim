@@ -2,7 +2,7 @@
 " neovim-fuzzy
 "
 " Author:       Alexis Sellier <http://cloudhead.io>
-" Version:      0.1
+" Version:      0.2
 "
 if exists("g:loaded_fuzzy") || &cp || !has('nvim')
   finish
