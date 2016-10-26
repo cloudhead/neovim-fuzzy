@@ -64,12 +64,12 @@ function! s:ag.find(root, ignorelist) dict
   let ignorefile = tempname()
   call writefile(a:ignorelist, ignorefile, 'w')
   return systemlist(
-    \ "ag --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
+    \ "ag --hidden --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
 endfunction
 
 function! s:ag.find_contents(query) dict
   let query = empty(a:query) ? '^(?=.)' : a:query
-  return systemlist("ag --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
+  return systemlist("ag --hidden --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
 endfunction
 
 "
@@ -82,12 +82,12 @@ function! s:rg.find(root, ignorelist) dict
   for str in a:ignorelist
     call add(ignores, printf("-g '!%s'", str))
   endfor
-  return systemlist("rg --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
+  return systemlist("rg --hidden --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
 endfunction
 
 function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
-  return systemlist("rg -n --no-heading --color never -S " . query . " . 2>/dev/null")
+  return systemlist("rg --hidden -n --no-heading --color never -S " . query . " . 2>/dev/null")
 endfunction
 
 " Set the finder based on available binaries.
