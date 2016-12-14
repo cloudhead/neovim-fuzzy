@@ -186,7 +186,7 @@ function! s:fuzzy(choices, opts) abort
   let command = "fzy -l " . a:opts.lines . " > " . outputs . " < " . inputs
   let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'root': a:opts.root }
 
-  function! opts.on_exit(id, code) abort
+  function! opts.on_exit(id, code, _event) abort
     " NOTE: The order of these operations is important: Doing the delete first
     " would leave an empty buffer in netrw. Doing the resize first would break
     " the height of other splits below it.
