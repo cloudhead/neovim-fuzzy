@@ -138,7 +138,6 @@ function! s:fuzzy_open(root) abort
   let bufs = filter(range(1, bufnr('$')),
     \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val')
   let bufs = map(bufs, 'expand(bufname(v:val))')
-  call reverse(bufs)
 
   " Add the '#' buffer at the head of the list.
   if bufnr('#') > 0 && bufnr('%') != bufnr('#')
