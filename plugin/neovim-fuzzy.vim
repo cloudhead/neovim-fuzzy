@@ -47,11 +47,11 @@ function! s:fuzzy_err_noexec()
 endfunction
 
 " Methods to be replaced by an actual implementation.
-function! s:fuzzy_source.find(il) dict
+function! s:fuzzy_source.find(...) dict
   call s:fuzzy_err_noexec()
 endfunction
 
-function! s:fuzzy_source.find_contents() dict
+function! s:fuzzy_source.find_contents(...) dict
   call s:fuzzy_err_noexec()
 endfunction
 
