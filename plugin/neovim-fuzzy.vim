@@ -212,7 +212,7 @@ function! s:fuzzy(choices, opts) abort
     if !empty(result)
       let file = self.handler(result)
       exe 'lcd' self.root
-      silent execute g:fuzzy_opencmd expand(fnameescape(file.name))
+      silent execute g:fuzzy_opencmd fnameescape(expand(file.name))
       lcd -
       if has_key(file, 'lnum')
         silent execute file.lnum
