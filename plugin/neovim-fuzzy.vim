@@ -9,6 +9,10 @@ if exists("g:loaded_fuzzy") || &cp || !has('nvim')
 endif
 let g:loaded_fuzzy = 1
 
+if !exists("g:fuzzy_bufferpos")
+  let g:fuzzy_bufferpos = 'below'
+endif
+
 if !exists("g:fuzzy_opencmd")
   let g:fuzzy_opencmd = 'edit'
 endif
@@ -214,9 +218,9 @@ function! s:fuzzy(choices, opts) abort
   let s:fuzzy_prev_window_height = winheight('%')
 
   if bufnr(s:fuzzy_bufnr) > 0
-    exe 'keepalt' 'below' a:opts.lines . 'sp' bufname(s:fuzzy_bufnr)
+    exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'sp' bufname(s:fuzzy_bufnr)
   else
-    exe 'keepalt' 'below' a:opts.lines . 'new'
+    exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'new'
     let s:fuzzy_job_id = termopen(command, opts)
     let b:fuzzy_status = printf(
       \ a:opts.statusfmt,
