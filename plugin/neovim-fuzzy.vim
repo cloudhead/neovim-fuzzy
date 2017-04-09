@@ -149,7 +149,10 @@ function! s:fuzzy_open(root) abort
 
   " Add the '#' buffer at the head of the list.
   if bufnr('#') > 0 && bufnr('%') != bufnr('#')
-    call insert(bufs, expand(bufname('#')))
+    let altbufname = expand(bufname('#'))
+    if !empty(altbufname)
+      call insert(bufs, altbufname)
+    end
   endif
 
   " Save a list of files the find command should ignore.
