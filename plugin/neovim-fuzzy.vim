@@ -17,6 +17,10 @@ if !exists("g:fuzzy_opencmd")
   let g:fuzzy_opencmd = 'edit'
 endif
 
+if !exists("g:fuzzy_executable")
+  let g:fuzzy_executable = 'fzy'
+endif
+
 if !exists("g:fuzzy_winheight")
   let g:fuzzy_winheight = 12
 endif
@@ -183,8 +187,8 @@ function! s:fuzzy(choices, opts) abort
   let inputs = tempname()
   let outputs = tempname()
 
-  if !executable('fzy')
-    echoerr "Fuzzy: the executable 'fzy' was not found in your path"
+  if !executable(g:fuzzy_executable)
+    echoerr "Fuzzy: the executable '" . g:fuzzy_executable . "' was not found in your path"
     return
   endif
 
@@ -193,7 +197,7 @@ function! s:fuzzy(choices, opts) abort
 
   call writefile(a:choices, inputs)
 
-  let command = "fzy -l " . a:opts.lines . " > " . outputs . " < " . inputs
+  let command = g:fuzzy_executable . " -l " . a:opts.lines . " > " . outputs . " < " . inputs
   let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'root': a:opts.root }
 
   function! opts.on_exit(id, code, _event) abort
@@ -208,16 +212,18 @@ function! s:fuzzy(choices, opts) abort
       return
     endif
 
-    let result = readfile(self.outputs)
-    if !empty(result)
-      let file = self.handler(result)
-      exe 'lcd' self.root
-      silent execute g:fuzzy_opencmd fnameescape(expand(file.name))
-      lcd -
-      if has_key(file, 'lnum')
-        silent execute file.lnum
-        normal! zz
-      endif
+    let results = readfile(self.outputs)
+    if !empty(results)
+      for result in results
+        let file = self.handler([result])
+        exe 'lcd' self.root
+        silent execute g:fuzzy_opencmd fnameescape(expand(file.name))
+        lcd -
+        if has_key(file, 'lnum')
+          silent execute file.lnum
+          normal! zz
+        endif
+      endfor
     endif
   endfunction
 
