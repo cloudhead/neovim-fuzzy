@@ -71,12 +71,13 @@ let s:ag = { 'path': 'ag' }
 function! s:ag.find(root, ignorelist) dict
   let ignorefile = tempname()
   call writefile(a:ignorelist, ignorefile, 'w')
-  return s:ag.path . " --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root
+  return systemlist(
+    \ s:ag.path . " --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
 endfunction
 
 function! s:ag.find_contents(query) dict
   let query = empty(a:query) ? '^(?=.)' : a:query
-  return s:ag.path . " --noheading --nogroup --nocolor -S " . shellescape(query) . " ."
+  return systemlist(s:ag.path . " --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
 endfunction
 
 "
@@ -89,12 +90,12 @@ function! s:rg.find(root, ignorelist) dict
   for str in a:ignorelist
     call add(ignores, printf("-g '!%s'", str))
   endfor
-  return s:rg.path . " --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null'
+  return systemlist(s:rg.path . " --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
 endfunction
 
 function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
-  return s:rg.path . " -n --no-heading --color never -S " . query . " . 2>/dev/null"
+  return systemlist(s:rg.path . " -n --no-heading --color never -S " . query . " . 2>/dev/null")
 endfunction
 
 " Set the finder based on available binaries.
@@ -117,7 +118,7 @@ endfunction
 
 function! s:fuzzy_grep(str) abort
   try
-    let contents_cmd = s:fuzzy_source.find_contents(a:str)
+    let contents = s:fuzzy_source.find_contents(a:str)
   catch
     echoerr v:exception
     return
@@ -134,7 +135,7 @@ function! s:fuzzy_grep(str) abort
     return { 'name': name, 'lnum': lnum }
   endfunction
 
-  return s:fuzzy(contents_cmd, opts)
+  return s:fuzzy(contents, opts)
 endfunction
 
 function! s:fuzzy_open(root) abort
@@ -159,7 +160,7 @@ function! s:fuzzy_open(root) abort
 
   " Get all files, minus the open buffers.
   try
-    let files_cmd = s:fuzzy_source.find('.', ignorelist)
+    let files = s:fuzzy_source.find('.', ignorelist)
   catch
     echoerr v:exception
     return
@@ -168,10 +169,7 @@ function! s:fuzzy_open(root) abort
   endtry
 
   " Put it all together.
-  let result = tempname()
-  call writefile(bufs, result)
-  call system(files_cmd . ' >> ' . result)
-  let result = 'cat ' . result
+  let result = bufs + files
 
   let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyOpen %s (%d files)', 'root': root }
   function! opts.handler(result)
@@ -181,7 +179,8 @@ function! s:fuzzy_open(root) abort
   return s:fuzzy(result, opts)
 endfunction
 
-function! s:fuzzy(choices_cmd, opts) abort
+function! s:fuzzy(choices, opts) abort
+  let inputs = tempname()
   let outputs = tempname()
 
   if !executable('fzy')
@@ -192,10 +191,9 @@ function! s:fuzzy(choices_cmd, opts) abort
   " Clear the command line.
   echo
 
-  let fifo_name = tempname()
-  call system(['mkfifo', fifo_name])
-  let command = a:choices_cmd . " | tee " . fifo_name . " | fzy -l " . a:opts.lines . " > " . outputs
-  let num_choices_cmd = 'wc -l ' . fifo_name
+  call writefile(a:choices, inputs)
+
+  let command = "fzy -l " . a:opts.lines . " > " . outputs . " < " . inputs
   let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'root': a:opts.root }
 
   function! opts.on_exit(id, code, _event) abort
@@ -207,12 +205,10 @@ function! s:fuzzy(choices_cmd, opts) abort
     exe 'resize' s:fuzzy_prev_window_height
 
     if a:code != 0 || !filereadable(self.outputs)
-      call delete(self.outputs)
       return
     endif
 
     let result = readfile(self.outputs)
-    call delete(self.outputs)
     if !empty(result)
       let file = self.handler(result)
       exe 'lcd' self.root
@@ -233,12 +229,10 @@ function! s:fuzzy(choices_cmd, opts) abort
   else
     exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'new'
     let s:fuzzy_job_id = termopen(command, opts)
-    let num_choices = str2nr(system(num_choices_cmd))
-    call delete(fifo_name)
     let b:fuzzy_status = printf(
       \ a:opts.statusfmt,
       \ fnamemodify(opts.root, ':~:.'),
-      \ num_choices)
+      \ len(a:choices))
     setlocal statusline=%{b:fuzzy_status}
   endif
   let s:fuzzy_bufnr = bufnr('%')
