@@ -160,17 +160,17 @@ function! s:fuzzy_open(root) abort
   " Get all files, minus the open buffers.
   try
     let files_cmd = s:fuzzy_source.find('.', ignorelist)
+
+    " Put it all together.
+    let result = tempname()
+    call writefile(bufs, result)
+    call system(files_cmd . ' >> ' . result)
   catch
     echoerr v:exception
     return
   finally
     lcd -
   endtry
-
-  " Put it all together.
-  let result = tempname()
-  call writefile(bufs, result)
-  call system(files_cmd . ' >> ' . result)
   let result = 'cat ' . result
 
   let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyOpen %s (%d files)', 'root': root }
@@ -196,7 +196,7 @@ function! s:fuzzy(choices_cmd, opts) abort
   call system(['mkfifo', fifo_name])
   let command = a:choices_cmd . " | tee " . fifo_name . " | fzy -l " . a:opts.lines . " > " . outputs
   let num_choices_cmd = 'wc -l ' . fifo_name
-  let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'root': a:opts.root }
+  let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'cwd': a:opts.root }
 
   function! opts.on_exit(id, code, _event) abort
     " NOTE: The order of these operations is important: Doing the delete first
@@ -215,7 +215,7 @@ function! s:fuzzy(choices_cmd, opts) abort
     call delete(self.outputs)
     if !empty(result)
       let file = self.handler(result)
-      exe 'lcd' self.root
+      exe 'lcd' self.cwd
       silent execute g:fuzzy_opencmd fnameescape(expand(file.name))
       lcd -
       if has_key(file, 'lnum')
@@ -237,7 +237,7 @@ function! s:fuzzy(choices_cmd, opts) abort
     call delete(fifo_name)
     let b:fuzzy_status = printf(
       \ a:opts.statusfmt,
-      \ fnamemodify(opts.root, ':~:.'),
+      \ fnamemodify(opts.cwd, ':~:.'),
       \ num_choices)
     setlocal statusline=%{b:fuzzy_status}
   endif
