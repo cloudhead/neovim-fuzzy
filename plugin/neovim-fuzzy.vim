@@ -70,7 +70,7 @@ let s:ag = { 'path': 'ag' }
 
 function! s:ag.find(root, ignorelist) dict
   let ignorefile = tempname()
-  call writefile(a:ignorelist, ignorefile, 'w')
+  call writefile(a:ignorelist, ignorefile, 's')
   return systemlist(
     \ s:ag.path . " --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
 endfunction
