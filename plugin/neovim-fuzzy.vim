@@ -154,7 +154,7 @@ function! s:fuzzy_open(root) abort
   " Add the '#' buffer at the head of the list.
   if bufnr('#') > 0 && bufnr('%') != bufnr('#')
     let altbufname = expand(bufname('#'))
-    if !empty(altbufname)
+    if !empty(altbufname) && buflisted(altbufname) && empty(getbufvar(altbufname, "&buftype"))
       call insert(bufs, altbufname)
     end
   endif
