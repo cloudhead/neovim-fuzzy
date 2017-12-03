@@ -148,13 +148,13 @@ function! s:fuzzy_open(root) abort
 
   " Get open buffers.
   let bufs = filter(range(1, bufnr('$')),
-    \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val && empty(getbufvar(v:val, "&buftype")) && !empty(bufname(v:val))')
+    \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val && !empty(bufname(v:val))')
   let bufs = map(bufs, 'expand(bufname(v:val))')
 
   " Add the '#' buffer at the head of the list.
   if bufnr('#') > 0 && bufnr('%') != bufnr('#')
     let altbufname = expand(bufname('#'))
-    if !empty(altbufname) && buflisted(altbufname) && empty(getbufvar(altbufname, "&buftype"))
+    if !empty(altbufname) && buflisted(altbufname)
       call insert(bufs, altbufname)
     end
   endif
