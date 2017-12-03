@@ -240,6 +240,8 @@ function! s:fuzzy(choices, opts) abort
       \ fnamemodify(opts.root, ':~:.'),
       \ len(a:choices))
     setlocal statusline=%{b:fuzzy_status}
+    set norelativenumber
+    set nonumber
   endif
   let s:fuzzy_bufnr = bufnr('%')
   set filetype=fuzzy
