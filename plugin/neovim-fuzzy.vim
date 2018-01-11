@@ -280,6 +280,10 @@ function! s:fuzzy_split(split)
   let cmd = get(g:fuzzy_splitcmd_map, a:split, '')
   if cmd != ''
     let s:fuzzy_selected_opencmd = cmd
-    call jobsend(s:fuzzy_job_id, "\r\n")
+    if exists('*chansend')
+        call chansend(s:fuzzy_job_id, "\r\n")
+    else
+        call jobsend(s:fuzzy_job_id, "\r\n")
+    endif
   endif
 endfunction
