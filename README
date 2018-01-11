@@ -41,9 +41,29 @@ Fuzzy file finding for neovim, via fzy[1].
 
       nnoremap <C-p> :FuzzyOpen<CR>
 
-  Then hit <Ctrl-P> to open the finder. Hit <Enter> to jump to the selected file
-  and <Esc> to close the pane. You may also navigate the file list with <Ctrl-N>
-  and <Ctrl-P>. See the fzy documentation for the full list of key bindings.
+  Then hit <Ctrl-P> to open the finder.
+
+  Once in the fzy finder:
+
+      <Esc>     close fzy pane
+      <Enter>   open selected file with default open command
+      <Ctrl-S>  open selected file in new horizontal split
+      <Ctrl-V>  open selected file in new vertical split
+      <Ctrl-T>  open selected file in new tab
+      <Ctrl-N>  next entry
+      <Ctrl-P>  previous entry
+
+  See the fzy documentation for the full list of key bindings.
+
+  neovim-fuzzy-specific keybindings can be disabled with:
+
+      let g:fuzzy_use_default_keymap = 0
+
+  Set your own keybindings for opening files in splits with:
+
+      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-T> <C-\><C-n>:FuzzyOpenInTab<CR>
+      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-S> <C-\><C-n>:FuzzyOpenInSplit<CR>
+      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-V> <C-\><C-n>:FuzzyOpenInVSplit<CR>
 
   When no input is given, fuzzy shows the alternate buffer (also known as '#'),
   followed by other open buffers, followed by all other files.

@@ -4,6 +4,11 @@
 " Author:       Alexis Sellier <http://cloudhead.io>
 " Version:      0.2
 "
+
+if !exists("g:fuzzy_use_default_keymap")
+    let g:fuzzy_use_default_keymap = 1
+endif
+
 if exists("g:loaded_fuzzy") || &cp || !has('nvim')
   finish
 endif
@@ -13,8 +18,8 @@ if !exists("g:fuzzy_bufferpos")
   let g:fuzzy_bufferpos = 'below'
 endif
 
-if !exists("g:fuzzy_opencmd")
-  let g:fuzzy_opencmd = 'edit'
+if !exists("g:fuzzy_default_opencmd")
+  let g:fuzzy_default_opencmd = 'edit'
 endif
 
 if !exists("g:fuzzy_executable")
@@ -32,11 +37,26 @@ if !exists("g:fuzzy_rootcmds")
   \ ]
 endif
 
+let g:fuzzy_splitcmd_map = {
+  \ 'current' : 'edit',
+  \ 'vsplit'  : 'vsplit',
+  \ 'split'   : 'split',
+  \ 'tab'     : 'tabe'
+  \ }
+
+if g:fuzzy_use_default_keymap
+    autocmd FileType fuzzy tnoremap <silent> <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
+    autocmd FileType fuzzy tnoremap <silent> <buffer> <C-T> <C-\><C-n>:FuzzyOpenInTab<CR>
+    autocmd FileType fuzzy tnoremap <silent> <buffer> <C-S> <C-\><C-n>:FuzzyOpenInSplit<CR>
+    autocmd FileType fuzzy tnoremap <silent> <buffer> <C-V> <C-\><C-n>:FuzzyOpenInVSplit<CR>
+endif
+
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
 let s:fuzzy_prev_window_height = -1
 let s:fuzzy_bufnr = -1
 let s:fuzzy_source = {}
+let s:fuzzy_selected_opencmd = ''
 
 function! s:strip(str)
   return substitute(a:str, '\n*$', '', 'g')
@@ -109,11 +129,12 @@ elseif executable(s:ag.path)
   let s:fuzzy_source = s:ag
 endif
 
-command! -nargs=? FuzzyGrep   call s:fuzzy_grep(<q-args>)
-command! -nargs=? FuzzyOpen   call s:fuzzy_open(<q-args>)
-command!          FuzzyKill   call s:fuzzy_kill()
-
-autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
+command! -nargs=? FuzzyGrep          call s:fuzzy_grep(<q-args>)
+command! -nargs=? FuzzyOpen          call s:fuzzy_open(<q-args>)
+command!          FuzzyOpenInTab     call s:fuzzy_split('tab')
+command!          FuzzyOpenInSplit   call s:fuzzy_split('split')
+command!          FuzzyOpenInVSplit  call s:fuzzy_split('vsplit')
+command!          FuzzyKill          call s:fuzzy_kill()
 
 function! s:fuzzy_kill()
   echo
@@ -217,7 +238,13 @@ function! s:fuzzy(choices, opts) abort
       for result in results
         let file = self.handler([result])
         exe 'lcd' self.root
-        silent execute g:fuzzy_opencmd fnameescape(expand(file.name))
+
+        if s:fuzzy_selected_opencmd == ''
+            let s:fuzzy_selected_opencmd = g:fuzzy_default_opencmd
+        endif
+
+        silent execute s:fuzzy_selected_opencmd . ' ' . fnameescape(expand(file.name))
+
         lcd -
         if has_key(file, 'lnum')
           silent execute file.lnum
@@ -234,6 +261,7 @@ function! s:fuzzy(choices, opts) abort
     exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'sp' bufname(s:fuzzy_bufnr)
   else
     exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'new'
+    let s:fuzzy_selected_opencmd = ""
     let s:fuzzy_job_id = termopen(command, opts)
     let b:fuzzy_status = printf(
       \ a:opts.statusfmt,
@@ -248,3 +276,10 @@ function! s:fuzzy(choices, opts) abort
   startinsert
 endfunction
 
+function! s:fuzzy_split(split)
+  let cmd = get(g:fuzzy_splitcmd_map, a:split, '')
+  if cmd != ''
+    let s:fuzzy_selected_opencmd = cmd
+    call jobsend(s:fuzzy_job_id, "\r\n")
+  endif
+endfunction
