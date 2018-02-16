@@ -1,0 +1,46 @@
+ neovim-fuzzy
+ ============
+
+*Fuzzy file finding for neovim, via [fzy][1]*.
+
+[1]: https://github.com/jhawthorn/fzy
+
+Rationale
+---------
+
+To my knowledge, fzy delivers the best results out of all fuzzy finders, including fzf, ctrl-p, command-t and unite. This is due to the advanced scoring algorithm[2].
+
+  [2]: https://github.com/jhawthorn/fzy/blob/master/ALGORITHM.md
+
+Requirements
+------------
+
+* neovim >= 0.1.5
+* fzy
+* rg[1] or ag[2] >= 0.33.0
+
+  [1]: https://github.com/BurntSushi/ripgrep
+  [2]: http://geoff.greer.fm/ag/
+
+Installation
+------------
+Install `fzy` via your package manager, or check [https://github.com/jhawthorn/fzy](https://github.com/jhawthorn/fzy) for instructions.
+
+If you're using vim-plug, add this to your vimrc:
+
+  `Plug 'cloudhead/neovim-fuzzy'`
+
+You can also copy the contents of this directory into your .vim folder.
+
+Usage
+-----
+
+Add something like this to your vimrc:
+
+  `nnoremap <C-p> :FuzzyOpen<CR>`
+
+Then hit <Ctrl-P> to open the finder. Hit <Enter> to jump to the selected file and <Esc> to close the pane. You may also navigate the file list with `<Ctrl-N>` and `<Ctrl-P>`. See the fzy documentation for the full list of key bindings.
+
+When no input is given, fuzzy shows the alternate buffer (also known as '#'), followed by other open buffers, followed by all other files.
+
+Fuzzy also lets you search within files, via the :FuzzyGrep command. You can use it on its own, or pass it an expression to search.
