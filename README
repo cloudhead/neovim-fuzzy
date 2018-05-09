@@ -57,13 +57,13 @@ Fuzzy file finding for neovim, via fzy[1].
 
   neovim-fuzzy-specific keybindings can be disabled with:
 
-      let g:fuzzy_use_default_keymap = 0
+      let g:fuzzy_bindkeys = 0
 
   Set your own keybindings for opening files in splits with:
 
-      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-T> <C-\><C-n>:FuzzyOpenInTab<CR>
-      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-S> <C-\><C-n>:FuzzyOpenInSplit<CR>
-      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-V> <C-\><C-n>:FuzzyOpenInVSplit<CR>
+      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-T> <C-\><C-n>:FuzzyOpenFileInTab<CR>
+      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-S> <C-\><C-n>:FuzzyOpenFileInSplit<CR>
+      autocmd FileType fuzzy tnoremap <silent> <buffer> <C-V> <C-\><C-n>:FuzzyOpenFileInVSplit<CR>
 
   When no input is given, fuzzy shows the alternate buffer (also known as '#'),
   followed by other open buffers, followed by all other files.

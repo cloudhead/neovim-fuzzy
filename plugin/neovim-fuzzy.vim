@@ -5,8 +5,8 @@
 " Version:      0.2
 "
 
-if !exists("g:fuzzy_use_default_keymap")
-    let g:fuzzy_use_default_keymap = 1
+if !exists("g:fuzzy_bindkeys")
+  let g:fuzzy_bindkeys = 1
 endif
 
 if exists("g:loaded_fuzzy") || &cp || !has('nvim')
@@ -18,8 +18,8 @@ if !exists("g:fuzzy_bufferpos")
   let g:fuzzy_bufferpos = 'below'
 endif
 
-if !exists("g:fuzzy_default_opencmd")
-  let g:fuzzy_default_opencmd = 'edit'
+if !exists("g:fuzzy_opencmd")
+  let g:fuzzy_opencmd = 'edit'
 endif
 
 if !exists("g:fuzzy_executable")
@@ -44,11 +44,11 @@ let g:fuzzy_splitcmd_map = {
   \ 'tab'     : 'tabe'
   \ }
 
-if g:fuzzy_use_default_keymap
-    autocmd FileType fuzzy tnoremap <silent> <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
-    autocmd FileType fuzzy tnoremap <silent> <buffer> <C-T> <C-\><C-n>:FuzzyOpenInTab<CR>
-    autocmd FileType fuzzy tnoremap <silent> <buffer> <C-S> <C-\><C-n>:FuzzyOpenInSplit<CR>
-    autocmd FileType fuzzy tnoremap <silent> <buffer> <C-V> <C-\><C-n>:FuzzyOpenInVSplit<CR>
+if g:fuzzy_bindkeys
+  autocmd FileType fuzzy tnoremap <silent> <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
+  autocmd FileType fuzzy tnoremap <silent> <buffer> <C-T> <C-\><C-n>:FuzzyOpenFileInTab<CR>
+  autocmd FileType fuzzy tnoremap <silent> <buffer> <C-S> <C-\><C-n>:FuzzyOpenFileInSplit<CR>
+  autocmd FileType fuzzy tnoremap <silent> <buffer> <C-V> <C-\><C-n>:FuzzyOpenFileInVSplit<CR>
 endif
 
 let s:fuzzy_job_id = 0
@@ -129,12 +129,12 @@ elseif executable(s:ag.path)
   let s:fuzzy_source = s:ag
 endif
 
-command! -nargs=? FuzzyGrep          call s:fuzzy_grep(<q-args>)
-command! -nargs=? FuzzyOpen          call s:fuzzy_open(<q-args>)
-command!          FuzzyOpenInTab     call s:fuzzy_split('tab')
-command!          FuzzyOpenInSplit   call s:fuzzy_split('split')
-command!          FuzzyOpenInVSplit  call s:fuzzy_split('vsplit')
-command!          FuzzyKill          call s:fuzzy_kill()
+command! -nargs=? FuzzyGrep              call s:fuzzy_grep(<q-args>)
+command! -nargs=? FuzzyOpen              call s:fuzzy_open(<q-args>)
+command!          FuzzyOpenFileInTab     call s:fuzzy_split('tab')
+command!          FuzzyOpenFileInSplit   call s:fuzzy_split('split')
+command!          FuzzyOpenFileInVSplit  call s:fuzzy_split('vsplit')
+command!          FuzzyKill              call s:fuzzy_kill()
 
 function! s:fuzzy_kill()
   echo
@@ -240,7 +240,7 @@ function! s:fuzzy(choices, opts) abort
         exe 'lcd' self.root
 
         if s:fuzzy_selected_opencmd == ''
-            let s:fuzzy_selected_opencmd = g:fuzzy_default_opencmd
+          let s:fuzzy_selected_opencmd = g:fuzzy_opencmd
         endif
 
         silent execute s:fuzzy_selected_opencmd . ' ' . fnameescape(expand(file.name))
@@ -281,9 +281,9 @@ function! s:fuzzy_split(split)
   if cmd != ''
     let s:fuzzy_selected_opencmd = cmd
     if exists('*chansend')
-        call chansend(s:fuzzy_job_id, "\r\n")
+      call chansend(s:fuzzy_job_id, "\r\n")
     else
-        call jobsend(s:fuzzy_job_id, "\r\n")
+      call jobsend(s:fuzzy_job_id, "\r\n")
     endif
   endif
 endfunction
