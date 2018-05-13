@@ -6,7 +6,7 @@
 "
 
 if !exists("g:fuzzy_bindkeys")
-  let g:fuzzy_bindkeys = 1
+  let g:fuzzy_bindkeys = 0
 endif
 
 if exists("g:loaded_fuzzy") || &cp || !has('nvim')
