@@ -167,10 +167,15 @@ function! s:fuzzy_open(root) abort
   let root = empty(a:root) ? s:fuzzy_getroot() : a:root
   exe 'lcd' root
 
-  " Get open buffers.
+  " 1. Get open buffers.
+  " Iterate over the listed buffer ids (the ones listed by :buffers)
+  " excluding the current ('%') and previous ('#') buffer ids.
   let bufs = filter(range(1, bufnr('$')),
-    \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val && !empty(bufname(v:val))')
-  let bufs = map(bufs, 'expand(bufname(v:val))')
+        \ 'buflisted(v:val)
+        \ && bufnr("%") != v:val
+        \ && bufnr("#") != v:val
+        \ && !empty(bufname(v:val))')
+  let bufs = map(bufs, 'expand(bufname(v:val))') " map to filepaths
 
   " Add the '#' buffer at the head of the list.
   if bufnr('#') > 0 && bufnr('%') != bufnr('#')
