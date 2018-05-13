@@ -58,6 +58,8 @@ let s:fuzzy_bufnr = -1
 let s:fuzzy_source = {}
 let s:fuzzy_selected_opencmd = ''
 
+let g:fuzzy_mode_message = ''
+
 function! s:strip(str)
   return substitute(a:str, '\n*$', '', 'g')
 endfunction
@@ -149,7 +151,9 @@ function! s:fuzzy_grep(str) abort
     return
   endtry
 
-  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyGrep %s (%d results)', 'root': '.' }
+  let g:fuzzy_mode_message = "fzy grep"
+
+  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': '%s (%d results)', 'root': '.' }
 
   function! opts.handler(result) abort
     let parts = split(join(a:result), ':')
@@ -201,7 +205,9 @@ function! s:fuzzy_open(root) abort
   " Put it all together.
   let result = bufs + files
 
-  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyOpen %s (%d files)', 'root': root }
+  let g:fuzzy_mode_message = "fzy open"
+
+  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': '%s (%d files)', 'root': root }
   function! opts.handler(result)
     return { 'name': join(a:result) }
   endfunction
@@ -270,15 +276,26 @@ function! s:fuzzy(choices, opts) abort
     let s:fuzzy_job_id = termopen(command, opts)
     let b:fuzzy_status = printf(
       \ a:opts.statusfmt,
-      \ fnamemodify(opts.root, ':~:.'),
+      \ pathshorten(fnamemodify(opts.root, ":~:.:f")),
       \ len(a:choices))
-    setlocal statusline=%{b:fuzzy_status}
+    " setlocal statusline=%{b:fuzzy_status}  " too intrusive
     set norelativenumber
     set nonumber
   endif
   let s:fuzzy_bufnr = bufnr('%')
   set filetype=fuzzy
   startinsert
+endfunction
+
+function! fzy#status_message() abort
+  return b:fuzzy_status
+endfunction
+
+function! fzy#mode() abort
+  if exists('g:fuzzy_mode_message')
+    return toupper(g:fuzzy_mode_message)
+  endif
+  return 'FZY'
 endfunction
 
 function! s:fuzzy_split(split)
