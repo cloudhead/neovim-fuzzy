@@ -91,18 +91,6 @@ if g:fuzzy_bindkeys
 endif
 
 " }}}
-" future implementations {{{1
-"
-" Methods to be replaced by an actual implementation.
-function! s:fuzzy_source.find(...) dict
-  call s:fuzzy_err_noexec()
-endfunction
-
-function! s:fuzzy_source.find_contents(...) dict
-  call s:fuzzy_err_noexec()
-endfunction
-
-" }}}
 " define commands {{{1
 "
 command! -nargs=? FuzzyGrep              call s:fuzzy_grep(<q-args>)
@@ -119,6 +107,15 @@ command!          FuzzyKill              call s:fuzzy_kill()
 
 " utils
 "
+function! s:fuzzy_source.find(...) dict " {{{1
+  " to be replaced by an actual implementation.
+  call s:fuzzy_err_noexec()
+endfunction
+
+function! s:fuzzy_source.find_contents(...) dict " {{{1
+  " to be replaced by an actual implementation.
+  call s:fuzzy_err_noexec()
+endfunction
 
 function! s:strip(str) " {{{1
   return substitute(a:str, '\n*$', '', 'g')
@@ -199,7 +196,6 @@ function! s:rg.find_contents(query) dict " {{{1
   let query = empty(a:query) ? '.' : shellescape(a:query)
   return systemlist(s:rg.path . " -n --no-heading --color never -S " . query . " . 2>/dev/null")
 endfunction " }}}
-
 
 function! s:fuzzy_grep(str) abort " {{{1
   try
