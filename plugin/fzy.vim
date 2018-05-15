@@ -49,7 +49,7 @@ let g:fuzzy_splitcmd_map = {
   \ 'tab'     : 'tabe'
   \ }
 
-let g:fuzzy_type_list = ['buffers', 'files']
+let g:fuzzy_view_list = ['buffers', 'files']
 
 let s:fuzzy_job_id = 0
 let s:fuzzy_prev_window = -1
@@ -57,7 +57,7 @@ let s:fuzzy_prev_window_height = -1
 let s:fuzzy_bufnr = -1
 let s:fuzzy_source = {}
 let s:fuzzy_selected_opencmd = ''
-let g:fuzzy_type_current = 0  " g:fuzzy_type_list[0] -> buffers
+let g:fuzzy_view_current = 0  " index in g:fuzzy_view_list
 
 " select contentsearch engine
 let s:rg = {'path': 'rg'}
@@ -157,7 +157,8 @@ function! s:fuzzy_getbuffers() " {{{1
 endfunction
 
 function! s:fuzzy_switch() " {{{1
-  let g:fuzzy_type_current = (g:fuzzy_type_current + 1) % len(g:fuzzy_type_list)
+  " 'buffers' -> 'files', 'files' -> 'buffers'
+  let g:fuzzy_view_current = (g:fuzzy_view_current + 1) % len(g:fuzzy_view_list)
   return s:fuzzy_kill()
 endfunction
 
@@ -223,13 +224,9 @@ function! s:fuzzy_grep(str) abort " {{{1
 endfunction
 
 function! s:fuzzy_open(root) abort " {{{1
-  " handle type arguments
-  let current_type = g:fuzzy_type_list[g:fuzzy_type_current]
-  if current_type == 'buffers'
-    let buf_only = 1
-  elseif current_type == 'files'
-    let buf_only = 0
-  endif
+  " prepare the call to fuzzy_open_args
+  let current_view = g:fuzzy_view_list[g:fuzzy_view_current]
+  let buf_only = current_view == 'buffers' ? 1 : 0
   return s:fuzzy_open_args(a:root, buf_only)
 
 endfunction
@@ -360,6 +357,6 @@ function! fzy#get_status_string() abort " {{{1
   return b:fuzzy_status_string
 endfunction
 
-function! fzy#get_type_string() abort " {{{1
-  return 'FZY ' . toupper(g:fuzzy_type_list[g:fuzzy_type_current])
+function! fzy#get_view_string() abort " {{{1
+  return 'FZY ' . toupper(g:fuzzy_view_list[g:fuzzy_view_current])
 endfunction " }}}
