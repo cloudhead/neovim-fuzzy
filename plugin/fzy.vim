@@ -122,7 +122,8 @@ command!          FuzzyKill              call s:fuzzy_kill()
 
 function! s:strip(str) " {{{1
   return substitute(a:str, '\n*$', '', 'g')
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_getroot() " {{{1
   for cmd in g:fuzzy_rootcmds
     let result = system(cmd)
@@ -131,7 +132,8 @@ function! s:fuzzy_getroot() " {{{1
     endif
   endfor
   return "."
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_getbuffers() " {{{1
   " 1. Get open buffers.
   " Iterate over the listed buffer ids (the ones listed by :buffers)
@@ -152,15 +154,18 @@ function! s:fuzzy_getbuffers() " {{{1
   endif
 
   return bufs
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_switch() " {{{1
   let g:fuzzy_type_current = (g:fuzzy_type_current + 1) % len(g:fuzzy_type_list)
   return s:fuzzy_kill()
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_kill() " {{{1
   echo
   call jobstop(s:fuzzy_job_id)
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_err_noexec() " {{{1
   throw "Fuzzy: no search executable was found. " .
       \ "Please make sure either '" .  s:ag.path .
@@ -174,7 +179,8 @@ function! s:ag.find(root, ignorelist) dict " {{{1
   call writefile(a:ignorelist, ignorefile, 's')
   return systemlist(
     \ s:ag.path . " --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
-endfunction "}}}
+endfunction
+
 function! s:ag.find_contents(query) dict " {{{1
   let query = empty(a:query) ? '^(?=.)' : a:query
   return systemlist(s:ag.path . " --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
@@ -186,7 +192,8 @@ function! s:rg.find(root, ignorelist) dict " {{{1
     call add(ignores, printf("-g '!%s'", str))
   endfor
   return systemlist(s:rg.path . " --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
-endfunction " }}}
+endfunction
+
 function! s:rg.find_contents(query) dict " {{{1
   let query = empty(a:query) ? '.' : shellescape(a:query)
   return systemlist(s:rg.path . " -n --no-heading --color never -S " . query . " . 2>/dev/null")
@@ -213,7 +220,8 @@ function! s:fuzzy_grep(str) abort " {{{1
   endfunction
 
   return s:fuzzy(contents, opts)
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_open(root) abort " {{{1
   " handle type arguments
   let current_type = g:fuzzy_type_list[g:fuzzy_type_current]
@@ -224,7 +232,8 @@ function! s:fuzzy_open(root) abort " {{{1
   endif
   return s:fuzzy_open_args(a:root, buf_only)
 
-endfunction "}}}
+endfunction
+
 function! s:fuzzy_open_args(root, buf_only) abort " {{{1
   let root = empty(a:root) ? s:fuzzy_getroot() : a:root
   exe 'lcd' root
@@ -259,7 +268,8 @@ function! s:fuzzy_open_args(root, buf_only) abort " {{{1
   endfunction
 
   return s:fuzzy(result, opts)
-endfunction " }}}
+endfunction
+
 function! s:fuzzy(choices, opts) abort " {{{1
   let inputs = tempname()
   let outputs = tempname()
@@ -330,7 +340,8 @@ function! s:fuzzy(choices, opts) abort " {{{1
   let s:fuzzy_bufnr = bufnr('%')
   set filetype=fuzzy
   startinsert
-endfunction " }}}
+endfunction
+
 function! s:fuzzy_split(split) " {{{1
   let cmd = get(g:fuzzy_splitcmd_map, a:split, '')
   if cmd != ''
@@ -345,9 +356,10 @@ endfunction " }}}
 
 " API
 "
-function! fzy#get_status_string() abort "{{{1
+function! fzy#get_status_string() abort " {{{1
   return b:fuzzy_status_string
-endfunction " }}}
-function! fzy#get_type_string() abort "{{{1
-  return 'FZY ' . toupper(g:fuzzy_type_list[g:fuzzy_type_current])
 endfunction
+
+function! fzy#get_type_string() abort " {{{1
+  return 'FZY ' . toupper(g:fuzzy_type_list[g:fuzzy_type_current])
+endfunction " }}}
