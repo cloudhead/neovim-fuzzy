@@ -3,7 +3,8 @@
 " fzy.vim
 "
 " Authors:      Alexis Sellier <http://cloudhead.io>
-"               nannery <https://github.com/nannery>
+" Contributors: Lorien Hu <https://github.com/lorienhu>
+"               David Nanry <https://github.com/nannery>
 "               Romain Bossart <https://github.com/bosr>
 " Version:      0.3
 "
