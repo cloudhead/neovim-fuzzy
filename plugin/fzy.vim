@@ -134,7 +134,7 @@ function! s:fuzzy_getroot() " {{{1
   return "."
 endfunction
 
-function! s:fuzzy_getbuffers() " {{{1
+function! s:fuzzy_get_buffernames() " {{{1
   " 1. Get open buffers.
   " Iterate over the listed buffer ids (the ones listed by :buffers)
   " excluding the current ('%') and previous ('#') buffer ids.
@@ -235,36 +235,34 @@ function! s:fuzzy_open_args(root, buf_only) abort " {{{1
   let root = empty(a:root) ? s:fuzzy_getroot() : a:root
   exe 'lcd' root
 
-  " get open buffer names
-  let bufs = s:fuzzy_getbuffers()
+  " get opened buffer names
+  let buffernames = s:fuzzy_get_buffernames()
+  let filenames = []
 
-  if a:buf_only == 1
-    let result = bufs
-
-  else
+  if a:buf_only == 0
     " save a list of files the find command should ignore.
-    let ignorelist = !empty(bufname('%')) ? bufs + [expand(bufname('%'))] : bufs
+    let ignorelist = !empty(bufname('%')) ? buffernames + [expand(bufname('%'))] : buffernames
 
-    " get all files, minus the open buffers.
+    " get all filenames, minus the open buffers.
     try
-      let files = s:fuzzy_source.find('.', ignorelist)
+      let filenames = s:fuzzy_source.find('.', ignorelist)
     catch
       echoerr v:exception
       return
     finally
       lcd -
     endtry
-
-    " put it all together.
-    let result = bufs + files
   end
 
-  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': '%s (%d files)', 'root': root }
-  function! opts.handler(result)
-    return { 'name': join(a:result) }
+  " put it all together.
+  let itemnames = buffernames + filenames
+
+  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': '%s (%d filenames)', 'root': root }
+  function! opts.handler(itemnames)
+    return { 'name': join(a:itemnames) }
   endfunction
 
-  return s:fuzzy(result, opts)
+  return s:fuzzy(itemnames, opts)
 endfunction
 
 function! s:fuzzy(choices, opts) abort " {{{1
