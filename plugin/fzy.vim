@@ -257,7 +257,13 @@ function! s:fuzzy_open_args(root, buf_only) abort " {{{1
   " put it all together.
   let itemnames = buffernames + filenames
 
-  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': '%s (%d filenames)', 'root': root }
+  let opts = {
+        \ 'lines': g:fuzzy_winheight,
+        \ 'statusfmt': '%s (%d files)',
+        \ 'root': root }
+  if a:buf_only == 1
+    let opts.statusfmt = '%s (%d bufs)'
+  endif
   function! opts.handler(itemnames)
     return { 'name': join(a:itemnames) }
   endfunction
