@@ -51,12 +51,12 @@ let g:fuzzy_splitcmd_map = {
 
 let g:fuzzy_view_list = ['buffers', 'files']
 
-let s:fuzzy_job_id = 0
-let s:fuzzy_prev_window = -1
-let s:fuzzy_prev_window_height = -1
-let s:fuzzy_bufnr = -1
-let s:fuzzy_source = {}
-let s:fuzzy_selected_opencmd = ''
+let s:job_id = 0
+let s:prev_window = -1
+let s:prev_window_height = -1
+let s:bufnr = -1
+let s:source = {}
+let s:selected_opencmd = ''
 let g:fuzzy_view_current = 0  " index in g:fuzzy_view_list
 
 " select contentsearch engine
@@ -66,16 +66,16 @@ let s:ag = {'path': 'ag'}
 if !exists("g:fuzzy_contentsearch_engine")
   " Set the finder based on available binaries.
   if executable(s:rg.path)
-    let s:fuzzy_source = s:rg
+    let s:source = s:rg
   elseif executable(s:ag.path)
-    let s:fuzzy_source = s:ag
+    let s:source = s:ag
   endif
 else
   " user-provided engine
   if g:fuzzy_contentsearch_engine ==? 'rg'
-    let s:fuzzy_source = s:rg
+    let s:source = s:rg
   elseif g:fuzzy_contentsearch_engine ==? 'ag'
-    let s:fuzzy_source = s:ag
+    let s:source = s:ag
   endif
 endif
 
@@ -93,35 +93,35 @@ endif
 " }}}
 " define commands {{{1
 "
-command! -nargs=? FuzzyGrep              call s:fuzzy_grep(<q-args>)
-command! -nargs=? FuzzyOpen              call s:fuzzy_open(<q-args>)
-command!          FuzzyOpenFiles         call s:fuzzy_open_args(<q-args>, 0)
-command!          FuzzyOpenBuffers       call s:fuzzy_open_args(<q-args>, 1)
-command!          FuzzyOpenFileInTab     call s:fuzzy_split('tab')
-command!          FuzzyOpenFileInSplit   call s:fuzzy_split('split')
-command!          FuzzyOpenFileInVSplit  call s:fuzzy_split('vsplit')
-command!          FuzzySwitch            call s:fuzzy_switch()
-command!          FuzzyKill              call s:fuzzy_kill()
+command! -nargs=? FuzzyGrep              call s:grep(<q-args>)
+command! -nargs=? FuzzyOpen              call s:open(<q-args>)
+command!          FuzzyOpenFiles         call s:open_args(<q-args>, 0)
+command!          FuzzyOpenBuffers       call s:open_args(<q-args>, 1)
+command!          FuzzyOpenFileInTab     call s:split('tab')
+command!          FuzzyOpenFileInSplit   call s:split('split')
+command!          FuzzyOpenFileInVSplit  call s:split('vsplit')
+command!          FuzzySwitch            call s:switch()
+command!          FuzzyKill              call s:kill()
 
 " }}}
 
 " utils
 "
-function! s:fuzzy_source.find(...) dict " {{{1
+function! s:source.find(...) dict " {{{1
   " to be replaced by an actual implementation.
-  call s:fuzzy_err_noexec()
+  call s:err_noexec()
 endfunction
 
-function! s:fuzzy_source.find_contents(...) dict " {{{1
+function! s:source.find_contents(...) dict " {{{1
   " to be replaced by an actual implementation.
-  call s:fuzzy_err_noexec()
+  call s:err_noexec()
 endfunction
 
 function! s:strip(str) " {{{1
   return substitute(a:str, '\n*$', '', 'g')
 endfunction
 
-function! s:fuzzy_getroot() " {{{1
+function! s:getroot() " {{{1
   for cmd in g:fuzzy_rootcmds
     let result = system(cmd)
     if v:shell_error == 0
@@ -131,7 +131,7 @@ function! s:fuzzy_getroot() " {{{1
   return "."
 endfunction
 
-function! s:fuzzy_get_buffernames() " {{{1
+function! s:get_buffernames() " {{{1
   " 1. Get open buffers.
   " Iterate over the listed buffer ids (the ones listed by :buffers)
   " excluding the current ('%') and previous ('#') buffer ids.
@@ -153,18 +153,18 @@ function! s:fuzzy_get_buffernames() " {{{1
   return bufs
 endfunction
 
-function! s:fuzzy_switch() " {{{1
+function! s:switch() " {{{1
   " 'buffers' -> 'files', 'files' -> 'buffers'
   let g:fuzzy_view_current = (g:fuzzy_view_current + 1) % len(g:fuzzy_view_list)
-  return s:fuzzy_kill()
+  return s:kill()
 endfunction
 
-function! s:fuzzy_kill() " {{{1
+function! s:kill() " {{{1
   echo
-  call jobstop(s:fuzzy_job_id)
+  call jobstop(s:job_id)
 endfunction
 
-function! s:fuzzy_err_noexec() " {{{1
+function! s:err_noexec() " {{{1
   throw "Fuzzy: no search executable was found. " .
       \ "Please make sure either '" .  s:ag.path .
       \ "' or '" . s:rg.path . "' are in your path"
@@ -197,9 +197,9 @@ function! s:rg.find_contents(query) dict " {{{1
   return systemlist(s:rg.path . " -n --no-heading --color never -S " . query . " . 2>/dev/null")
 endfunction " }}}
 
-function! s:fuzzy_grep(str) abort " {{{1
+function! s:grep(str) abort " {{{1
   try
-    let contents = s:fuzzy_source.find_contents(a:str)
+    let contents = s:source.find_contents(a:str)
   catch
     echoerr v:exception
     return
@@ -219,20 +219,20 @@ function! s:fuzzy_grep(str) abort " {{{1
   return s:fuzzy(contents, opts)
 endfunction
 
-function! s:fuzzy_open(root) abort " {{{1
+function! s:open(root) abort " {{{1
   " prepare the call to fuzzy_open_args
   let current_view = g:fuzzy_view_list[g:fuzzy_view_current]
   let buf_only = current_view == 'buffers' ? 1 : 0
-  return s:fuzzy_open_args(a:root, buf_only)
+  return s:open_args(a:root, buf_only)
 
 endfunction
 
-function! s:fuzzy_open_args(root, buf_only) abort " {{{1
-  let root = empty(a:root) ? s:fuzzy_getroot() : a:root
+function! s:open_args(root, buf_only) abort " {{{1
+  let root = empty(a:root) ? s:getroot() : a:root
   exe 'lcd' root
 
   " get opened buffer names
-  let buffernames = s:fuzzy_get_buffernames()
+  let buffernames = s:get_buffernames()
   let filenames = []
 
   if a:buf_only == 0
@@ -241,7 +241,7 @@ function! s:fuzzy_open_args(root, buf_only) abort " {{{1
 
     " get all filenames, minus the open buffers.
     try
-      let filenames = s:fuzzy_source.find('.', ignorelist)
+      let filenames = s:source.find('.', ignorelist)
     catch
       echoerr v:exception
       return
@@ -288,9 +288,9 @@ function! s:fuzzy(choices, opts) abort " {{{1
     " NOTE: The order of these operations is important: Doing the delete first
     " would leave an empty buffer in netrw. Doing the resize first would break
     " the height of other splits below it.
-    call win_gotoid(s:fuzzy_prev_window)
-    exe 'silent' 'bdelete!' s:fuzzy_bufnr
-    exe 'resize' s:fuzzy_prev_window_height
+    call win_gotoid(s:prev_window)
+    exe 'silent' 'bdelete!' s:bufnr
+    exe 'resize' s:prev_window_height
 
     if a:code != 0 || !filereadable(self.outputs)
       return
@@ -302,11 +302,11 @@ function! s:fuzzy(choices, opts) abort " {{{1
         let file = self.handler([result])
         exe 'lcd' self.root
 
-        if s:fuzzy_selected_opencmd == ''
-          let s:fuzzy_selected_opencmd = g:fuzzy_opencmd
+        if s:selected_opencmd == ''
+          let s:selected_opencmd = g:fuzzy_opencmd
         endif
 
-        silent execute s:fuzzy_selected_opencmd . ' ' . fnameescape(expand(file.name))
+        silent execute s:selected_opencmd . ' ' . fnameescape(expand(file.name))
 
         lcd -
         if has_key(file, 'lnum')
@@ -317,15 +317,15 @@ function! s:fuzzy(choices, opts) abort " {{{1
     endif
   endfunction
 
-  let s:fuzzy_prev_window = win_getid()
-  let s:fuzzy_prev_window_height = winheight('%')
+  let s:prev_window = win_getid()
+  let s:prev_window_height = winheight('%')
 
-  if bufnr(s:fuzzy_bufnr) > 0
-    exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'sp' bufname(s:fuzzy_bufnr)
+  if bufnr(s:bufnr) > 0
+    exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'sp' bufname(s:bufnr)
   else
     exe 'keepalt' g:fuzzy_bufferpos a:opts.lines . 'new'
-    let s:fuzzy_selected_opencmd = ""
-    let s:fuzzy_job_id = termopen(command, opts)
+    let s:selected_opencmd = ""
+    let s:job_id = termopen(command, opts)
     let b:fuzzy_status_string = printf(
       \ a:opts.statusfmt,
       \ pathshorten(fnamemodify(opts.root, ":~:.:f")),
@@ -334,19 +334,19 @@ function! s:fuzzy(choices, opts) abort " {{{1
     set norelativenumber
     set nonumber
   endif
-  let s:fuzzy_bufnr = bufnr('%')
+  let s:bufnr = bufnr('%')
   set filetype=fuzzy
   startinsert
 endfunction
 
-function! s:fuzzy_split(split) " {{{1
+function! s:split(split) " {{{1
   let cmd = get(g:fuzzy_splitcmd_map, a:split, '')
   if cmd != ''
-    let s:fuzzy_selected_opencmd = cmd
+    let s:selected_opencmd = cmd
     if exists('*chansend')
-      call chansend(s:fuzzy_job_id, "\r\n")
+      call chansend(s:job_id, "\r\n")
     else
-      call jobsend(s:fuzzy_job_id, "\r\n")
+      call jobsend(s:job_id, "\r\n")
     endif
   endif
 endfunction " }}}
