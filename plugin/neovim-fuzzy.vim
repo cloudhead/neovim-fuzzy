@@ -9,6 +9,27 @@ if exists("g:loaded_fuzzy") || &cp || !has('nvim')
 endif
 let g:loaded_fuzzy = 1
 
+if has('nvim')
+  rsh
+else
+  set viminfo+=!
+  if filereadable('~/.viminfo')
+    rv
+  endif
+endif
+
+if !exists('g:FUZZY_MRU_FILE_LIST')
+  let g:FUZZY_MRU_FILE_LIST = []
+endif
+
+if !exists('g:fuzzy_mru_file_list_size')
+  let g:fuzzy_mru_file_list_size = 10
+end
+
+if !exists('g:fuzzy_mru_ignore_patterns')
+  let g:fuzzy_mru_ignore_patterns = 'fugitive\|\.git/\|\_^/tmp/'
+end
+
 if !exists("g:fuzzy_bufferpos")
   let g:fuzzy_bufferpos = 'below'
 endif
@@ -112,8 +133,11 @@ endif
 command! -nargs=? FuzzyGrep   call s:fuzzy_grep(<q-args>)
 command! -nargs=? FuzzyOpen   call s:fuzzy_open(<q-args>)
 command!          FuzzyKill   call s:fuzzy_kill()
+command!          FuzzyMru    call s:fuzzy_mru()
 
 autocmd FileType fuzzy tnoremap <buffer> <Esc> <C-\><C-n>:FuzzyKill<CR>
+autocmd BufWinLeave,BufWritePost * call s:fuzzy_add_mru()
+autocmd BufEnter * call s:fuzzy_del_mru()
 
 function! s:fuzzy_kill()
   echo
@@ -248,3 +272,48 @@ function! s:fuzzy(choices, opts) abort
   startinsert
 endfunction
 
+function! s:fuzzy_mru()
+  let files = map(copy(g:FUZZY_MRU_FILE_LIST), 'fnamemodify(v:val, ":~:.")')
+  let file_len = len(files)
+
+  if file_len == 0
+    return
+  end
+  if file_len > 10
+    let file_len = 10
+  endif
+
+  let opts = { 'lines': file_len + 1, 'statusfmt': 'FuzzyMru %s (%d files)', 'root': '.' }
+  function! opts.handler(result)
+    return { 'name': join(a:result) }
+  endfunction
+
+  return s:fuzzy(files, opts)
+endfunction
+
+function! s:fuzzy_add_mru()
+  let cpath = expand('%:p')
+  if !filereadable(cpath)
+    return
+  endif
+
+  if cpath =~# g:fuzzy_mru_ignore_patterns
+    return
+  end
+
+  let idx = index(g:FUZZY_MRU_FILE_LIST, cpath)
+  if idx >= 0
+    call filter(g:FUZZY_MRU_FILE_LIST, 'v:val !=# cpath')
+  endif
+  call insert(g:FUZZY_MRU_FILE_LIST, cpath)
+endfunction
+
+function! s:fuzzy_del_mru()
+  let cpath = expand('%:p')
+  let idx = index(g:FUZZY_MRU_FILE_LIST, cpath)
+  if idx >= 0
+    call remove(g:FUZZY_MRU_FILE_LIST, idx)
+  end
+  let max_index = g:fuzzy_mru_file_list_size - 1
+  let g:FUZZY_MRU_FILE_LIST = g:FUZZY_MRU_FILE_LIST[:max_index]
+endfunction
