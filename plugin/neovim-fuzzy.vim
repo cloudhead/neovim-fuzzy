@@ -164,7 +164,7 @@ function! s:fuzzy_open(root) abort
 
   " Get all files, minus the open buffers.
   try
-    let files = s:fuzzy_source.find('.', ignorelist)
+    let files = s:fuzzy_source.find('', ignorelist)
   catch
     echoerr v:exception
     return
