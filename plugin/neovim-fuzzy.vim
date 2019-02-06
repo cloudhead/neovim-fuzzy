@@ -128,7 +128,7 @@ function! s:fuzzy_grep(str) abort
     return
   endtry
 
-  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyGrep %s (%d results)', 'root': '.' }
+  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyGrep %s (%d results)', 'root': '.' , 'prompt': 'grep> '}
 
   function! opts.handler(result) abort
     let parts = split(join(a:result), ':')
@@ -175,7 +175,7 @@ function! s:fuzzy_open(root) abort
   " Put it all together.
   let result = bufs + files
 
-  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyOpen %s (%d files)', 'root': root }
+  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyOpen %s (%d files)', 'root': root , 'prompt': 'files> ' }
   function! opts.handler(result)
     return { 'name': join(a:result) }
   endfunction
@@ -197,7 +197,7 @@ function! s:fuzzy(choices, opts) abort
 
   call writefile(a:choices, inputs)
 
-  let command = g:fuzzy_executable . " -l " . a:opts.lines . " > " . outputs . " < " . inputs
+  let command = g:fuzzy_executable . " -l " . a:opts.lines . " -p " . shellescape(a:opts.prompt) . " > " . outputs . " < " . inputs
   let opts = { 'outputs': outputs, 'handler': a:opts.handler, 'root': a:opts.root }
 
   function! opts.on_exit(id, code, _event) abort
