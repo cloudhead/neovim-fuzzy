@@ -242,6 +242,7 @@ function! s:fuzzy(choices, opts) abort
     setlocal statusline=%{b:fuzzy_status}
     set norelativenumber
     set nonumber
+    set nospell
   endif
   let s:fuzzy_bufnr = bufnr('%')
   set filetype=fuzzy
