@@ -92,7 +92,7 @@ let s:rg = { 'path': 'rg' }
 function! s:rg.find(root, ignorelist) dict
   let ignores = []
   for str in a:ignorelist
-    call add(ignores, printf("-g '!%s'", str))
+    call add(ignores, printf("-g '!/%s'", str))
   endfor
   return systemlist(s:rg.path . " --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
 endfunction
@@ -148,7 +148,13 @@ function! s:fuzzy_open(root) abort
 
   " Get open buffers.
   let bufs = filter(range(1, bufnr('$')),
-    \ 'buflisted(v:val) && bufnr("%") != v:val && bufnr("#") != v:val && !empty(bufname(v:val))')
+    \ 'buflisted(v:val) && !empty(bufname(v:val))')
+
+  " Filter open buffers out.
+  let bufs = filter(range(1, bufnr('$')),
+    \ 'bufnr("%") != v:val && bufnr("#") != v:val')
+
+  " Get the full buffer name if possible.
   let bufs = map(bufs, 'expand(bufname(v:val))')
 
   " Add the '#' buffer at the head of the list.
