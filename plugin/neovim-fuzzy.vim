@@ -92,11 +92,9 @@ endfunction
 "
 let s:ag = { 'path': 'ag' }
 
-function! s:ag.find(root, ignorelist) dict
-  let ignorefile = tempname()
-  call writefile(a:ignorelist, ignorefile, 's')
+function! s:ag.find(root) dict
   return systemlist(
-    \ s:ag.path . " --silent --nocolor -g '' -Q --path-to-ignore " . ignorefile . ' ' . a:root)
+    \ s:ag.path . " --silent --nocolor -g '' -Q " . a:root)
 endfunction
 
 function! s:ag.find_contents(query) dict
@@ -109,12 +107,8 @@ endfunction
 "
 let s:rg = { 'path': 'rg' }
 
-function! s:rg.find(root, ignorelist) dict
-  let ignores = []
-  for str in a:ignorelist
-    call add(ignores, printf("-g '!/%s'", str))
-  endfor
-  return systemlist(s:rg.path . " --color never --files --fixed-strings " . join(ignores, ' ') . ' ' . a:root . ' 2>/dev/null')
+function! s:rg.find(root) dict
+  return systemlist(s:rg.path . " --color never --files --fixed-strings " . a:root . ' 2>/dev/null')
 endfunction
 
 function! s:rg.find_contents(query) dict
@@ -191,7 +185,8 @@ function! s:fuzzy_open(root) abort
 
   " Get all files, minus the open buffers.
   try
-    let files = s:fuzzy_source.find('', ignorelist)
+    let results = s:fuzzy_source.find('')
+    let files = filter(results, 'index(ignorelist, v:val) == -1')
   catch
     echoerr v:exception
     return
