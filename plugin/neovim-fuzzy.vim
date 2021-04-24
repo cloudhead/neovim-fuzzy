@@ -32,8 +32,8 @@ endif
 
 if !exists("g:fuzzy_rootcmds")
   let g:fuzzy_rootcmds = [
-  \ 'git rev-parse --show-toplevel',
-  \ 'hg root'
+  \ ["git", "rev-parse", "--show-toplevel"],
+  \ ["hg", "root"]
   \ ]
 endif
 
@@ -108,12 +108,14 @@ endfunction
 let s:rg = { 'path': 'rg' }
 
 function! s:rg.find(root) dict
-  return systemlist(s:rg.path . " --color never --files --fixed-strings " . a:root . ' 2>/dev/null')
+  return systemlist([
+        \ s:rg.path, "--color", "never", "--files", "--fixed-strings"
+        \ ] + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
-  return systemlist(s:rg.path . " -n --no-heading --color never -S " . query . " . 2>/dev/null")
+  return systemlist([s:rg.path, "-n", "--no-heading", "--color", "never", "-S", query])
 endfunction
 
 " Set the finder based on available binaries.
@@ -185,7 +187,7 @@ function! s:fuzzy_open(root) abort
 
   " Get all files, minus the open buffers.
   try
-    let results = s:fuzzy_source.find('')
+    let results = s:fuzzy_source.find([])
     let files = filter(results, 'index(ignorelist, v:val) == -1')
   catch
     echoerr v:exception
