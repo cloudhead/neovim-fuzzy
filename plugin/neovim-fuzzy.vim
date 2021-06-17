@@ -93,8 +93,9 @@ endfunction
 let s:ag = { 'path': 'ag' }
 
 function! s:ag.find(root) dict
-  return systemlist(
-    \ s:ag.path . " --silent --nocolor -g '' -Q " . a:root)
+  return systemlist([
+        \ s:ag.path, "--silent", "--nocolor", "-g", "", "-Q"
+        \ ] + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:ag.find_contents(query) dict
