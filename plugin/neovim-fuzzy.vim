@@ -94,13 +94,13 @@ let s:ag = { 'path': 'ag' }
 
 function! s:ag.find(root) dict
   return systemlist([
-        \ s:ag.path, "--silent", "--nocolor", "-g", "", "-Q"
+        \ s:ag.path, "--hidden", "--silent","--nocolor", "-g", "", "-Q"
         \ ] + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:ag.find_contents(query) dict
   let query = empty(a:query) ? '^(?=.)' : a:query
-  return systemlist(s:ag.path . " --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
+  return systemlist(s:ag.path . "--hidden --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
 endfunction
 
 "
@@ -110,13 +110,13 @@ let s:rg = { 'path': 'rg' }
 
 function! s:rg.find(root) dict
   return systemlist([
-        \ s:rg.path, "--color", "never", "--files", "--fixed-strings"
+        \ s:rg.path, "--hidden", "--color", "never", "--files", "--fixed-strings"
         \ ] + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
-  return systemlist([s:rg.path, "-n", "--no-heading", "--color", "never", "-S", query])
+  return systemlist([s:rg.path, "--hidden", "-n", "--no-heading", "--color", "never", "-S", query])
 endfunction
 
 " Set the finder based on available binaries.
