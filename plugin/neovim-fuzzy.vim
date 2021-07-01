@@ -104,7 +104,7 @@ endfunction
 
 function! s:ag.find_contents(query) dict
   let query = empty(a:query) ? '^(?=.)' : a:query
-  return systemlist(s:ag.path . (g:fuzzy_hidden ? "--hidden" : "") . "--noheading --nogroup --nocolor -S " . shellescape(query) . " .")
+  return systemlist(s:ag.path . (g:fuzzy_hidden ? " --hidden " : " ") . "--noheading --nogroup --nocolor -S " . shellescape(query) . " .")
 endfunction
 
 "
@@ -115,7 +115,7 @@ let s:rg = { 'path': 'rg' }
 function! s:rg.find(root) dict
   return systemlist([
         \ s:rg.path, "--color", "never", "--files", "--fixed-strings"
-        \ ] + (g:fuzzy_hidden ? ["--hidden"] : [])+ (empty(a:root) ? [] : [a:root]))
+        \ ] + (g:fuzzy_hidden ? ["--hidden"] : []) + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:rg.find_contents(query) dict
