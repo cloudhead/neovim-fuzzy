@@ -37,6 +37,10 @@ if !exists("g:fuzzy_rootcmds")
   \ ]
 endif
 
+if !exists("g:fuzzy_hidden")
+  let g:fuzzy_hidden = 0
+endif
+
 let g:fuzzy_splitcmd_map = {
   \ 'current' : 'edit',
   \ 'vsplit'  : 'vsplit',
@@ -95,12 +99,12 @@ let s:ag = { 'path': 'ag' }
 function! s:ag.find(root) dict
   return systemlist([
         \ s:ag.path, "--silent", "--nocolor", "-g", "", "-Q"
-        \ ] + (empty(a:root) ? [] : [a:root]))
+        \ ] + (g:fuzzy_hidden ? ["--hidden"] : []) + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:ag.find_contents(query) dict
   let query = empty(a:query) ? '^(?=.)' : a:query
-  return systemlist(s:ag.path . " --noheading --nogroup --nocolor -S " . shellescape(query) . " .")
+  return systemlist(s:ag.path . (g:fuzzy_hidden ? " --hidden " : " ") . "--noheading --nogroup --nocolor -S " . shellescape(query) . " .")
 endfunction
 
 "
@@ -111,12 +115,14 @@ let s:rg = { 'path': 'rg' }
 function! s:rg.find(root) dict
   return systemlist([
         \ s:rg.path, "--color", "never", "--files", "--fixed-strings"
-        \ ] + (empty(a:root) ? [] : [a:root]))
+        \ ] + (g:fuzzy_hidden ? ["--hidden"] : []) + (empty(a:root) ? [] : [a:root]))
 endfunction
 
 function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
-  return systemlist([s:rg.path, "-n", "--no-heading", "--color", "never", "-S", query])
+  return systemlist([
+  	\ s:rg.path, "-n", "--no-heading", "--color", "never", "-S", query
+  	\ ] + (g:fuzzy_hidden ? ["--hidden"] : []))
 endfunction
 
 " Set the finder based on available binaries.
