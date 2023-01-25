@@ -125,6 +125,12 @@ function! s:rg.find_contents(query) dict
   	\ ] + (g:fuzzy_hidden ? ["--hidden"] : []))
 endfunction
 
+function! s:rg.find_todo() dict
+  return systemlist([
+    \ s:rg.path, "-n", "--no-heading", "--color", "never", "TODO|FIXME"
+    \ ])
+endfunction
+
 " Set the finder based on available binaries.
 if executable(s:rg.path)
   let s:fuzzy_source = s:rg
@@ -137,11 +143,38 @@ command! -nargs=? FuzzyOpen              call s:fuzzy_open(<q-args>)
 command!          FuzzyOpenFileInTab     call s:fuzzy_split('tab')
 command!          FuzzyOpenFileInSplit   call s:fuzzy_split('split')
 command!          FuzzyOpenFileInVSplit  call s:fuzzy_split('vsplit')
+command!          FuzzyTodo              call s:fuzzy_todo()
 command!          FuzzyKill              call s:fuzzy_kill()
 
 function! s:fuzzy_kill()
   echo
   call jobstop(s:fuzzy_job_id)
+endfunction
+
+function! s:fuzzy_todo() abort
+  function! Cleanup(key, val)
+    return substitute(substitute(a:val, "\\s\\+", " ", "g"), '\(:[0-9]\+:\).*\ze\(TODO\|FIXME\)', '\1 ', "")
+  endfunction
+
+  try
+    let contents = map(s:fuzzy_source.find_todo(), function('Cleanup'))
+  catch
+    echoerr v:exception
+    return
+  endtry
+
+  let opts = { 'lines': g:fuzzy_winheight, 'statusfmt': 'FuzzyTodo %s (%d results)', 'root': '.' }
+
+  function! opts.handler(result) abort
+    let parts = split(join(a:result), ':')
+    let name = parts[0]
+    let lnum = parts[1]
+    let text = parts[2] " Not used.
+
+    return { 'name': name, 'lnum': lnum }
+  endfunction
+
+  return s:fuzzy(contents, opts)
 endfunction
 
 function! s:fuzzy_grep(str) abort
