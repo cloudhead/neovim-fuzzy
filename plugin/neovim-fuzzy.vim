@@ -68,9 +68,11 @@ endfunction
 
 function! s:fuzzy_getroot()
   for cmd in g:fuzzy_rootcmds
-    let result = system(cmd)
-    if v:shell_error == 0
-      return s:strip(result)
+    if executable(cmd[0])
+      let result = system(cmd)
+      if v:shell_error == 0
+        return s:strip(result)
+      endif
     endif
   endfor
   return "."
